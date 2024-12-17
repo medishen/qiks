@@ -1,0 +1,7 @@
+docs
+benchmark
+.github
+examples
+.prettierrc
+tests
+tsconfig.test.js

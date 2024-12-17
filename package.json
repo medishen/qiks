@@ -1,0 +1,38 @@
+{
+  "name": "qiks",
+  "version": "1.0.0",
+  "description": "small cache system",
+  "main": "tsconfig.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/medishen/qiks.git"
+  },
+  "keywords": [
+    "cache",
+    "cache-system",
+    "lru"
+  ],
+  "author": "Mahdi",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/medishen/qiks/issues"
+  },
+  "homepage": "https://github.com/medishen/qiks#readme",
+  "dependencies": {
+    "@types/chai": "^5.0.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.10.2",
+    "chai": "^5.1.2",
+    "mocha": "^11.0.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

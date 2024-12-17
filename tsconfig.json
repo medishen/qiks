@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true,
+    "moduleResolution": "node",
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    "typeRoots": ["node_modules/@types", "src/types"]
+  },
+  "exclude": ["node_modules"],
+  "include": ["src/**/*.ts"]
+}
