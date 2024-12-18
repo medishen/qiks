@@ -1,5 +1,5 @@
 {
-  "name": "qiks",
+  "name": "@medishen/qiks",
   "version": "1.0.0",
   "description": "small cache system",
   "main": "tsconfig.js",
@@ -9,7 +9,10 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run test:unit & npm run test:e2e & npm run test:performance",
+    "test:unit": "mocha --require ts-node/register tests/unit/**/*.spec.ts",
+    "test:e2e": "mocha --require ts-node/register tests/e2e/*.spec.ts",
+    "test:performance": "mocha --require ts-node/register tests/performance/*.spec.ts"
   },
   "repository": {
     "type": "git",
@@ -20,6 +23,9 @@
     "cache-system",
     "lru"
   ],
+  "engines": {
+    "node": ">= 20"
+  },
   "author": "Mahdi",
   "license": "MIT",
   "bugs": {
@@ -30,7 +36,7 @@
     "@types/chai": "^5.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.10.2",
-    "chai": "^5.1.2",
+    "chai": "^4.3.7",
     "mocha": "^11.0.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"

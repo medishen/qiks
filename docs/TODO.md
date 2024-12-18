@@ -14,13 +14,9 @@
    - [x] Create README.md with basic project description and usage.
 
 2. **Core Infrastructure**
-   - [ ] Design a `Cache` class with:
-     - [ ] `set(key, value, options)`
-     - [ ] `get(key)`
-     - [ ] `delete(key)`
-     - [ ] `clear()`
-   - [ ] Implement in-memory storage with basic CRUD operations.
-   - [ ] Write unit tests for all core operations.
+   - [x] Design a `Cache` class with:
+   - [x] Implement in-memory storage with basic CRUD operations.
+   - [x] Write unit tests for all core operations.
 
 ### **Feature Development**
 
