@@ -14,7 +14,9 @@ A high-performance, feature-rich caching library in TypeScript designed for vers
     - [Core Features](#core-features)
   - [Installation](#installation)
   - [Contributing](#contributing)
+    - [Reporting Bugs](#reporting-bugs)
   - [License](#license)
+  - [Contact](#contact)
 
 ## Introduction
 
@@ -54,14 +56,16 @@ Refer to the [docs](./docs/document/) for the complete API reference.
 
 ## Contributing
 
-We welcome contributions! [To contribute](./docs/CONTRIBUTING.md)
+We welcome contributions! Please follow our [Contributing Guidelines](./docs/CONTRIBUTING.md) and use conventional commits for consistency.
 
-For issues or bugs, please [create an issue](https://github.com/medishen/qiks/issues).
+### Reporting Bugs
+
+If you find a bug, create an issue on our [GitHub Repository](https://github.com/medishen/qiks/issues).
 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
 
-**Contact:**
+## Contact
 
-- **Email:** bitsgenix@gmail.com
+For questions, suggestions, or support, email us at [bitsgenix@gmail.com](mailto:bitsgenix@gmail.com).
