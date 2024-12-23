@@ -55,4 +55,11 @@ export class Cache<K, V> {
   clear(): void {
     this.storage.clear();
   }
+
+  has(key: K): boolean {
+    return this.storage.has(key);
+  }
+  size(): number {
+    return this.storage.size;
+  }
 }
