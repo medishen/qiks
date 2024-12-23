@@ -1,11 +1,15 @@
 import { CacheError } from '../errors/CacheError';
-import { CacheEntry, CacheOptions } from '../types/CacheTypes';
+import { CacheEntry } from '../types/CacheTypes';
+import { CacheOptions } from '../types/utils';
+import { TTLManager } from '../utils/TTLManager';
 
 export class Cache<K, V> {
   private storage: Map<K, CacheEntry<V>>;
+  private ttlManager: TTLManager<K>;
 
   constructor() {
     this.storage = new Map();
+    this.ttlManager = new TTLManager();
   }
 
   set(key: K, value: V, options?: CacheOptions): void {
@@ -13,33 +17,26 @@ export class Cache<K, V> {
       throw new CacheError('Key must not be empty');
     }
 
-    const entry: CacheEntry<V> = { value };
+    this.storage.set(key, { value });
+
     if (options?.ttl) {
       if (options.ttl <= 0) {
         throw new CacheError('TTL must be greater than 0');
       }
-      entry.expiry = Date.now() + options.ttl;
+      this.ttlManager.setTTL(key, options.ttl);
     }
-
-    this.storage.set(key, entry);
   }
-
-  get(key: K): any {
+  get(key: K): V | null {
     if (!key) {
       throw new CacheError('Key must not be empty');
     }
+    if (this.ttlManager.isExpired(key)) {
+      this.storage.delete(key);
+      return null;
+    }
 
     const entry = this.storage.get(key);
-    if (!entry) {
-      return null;
-    }
-
-    if (entry.expiry && entry.expiry < Date.now()) {
-      this.storage.delete(key); // Remove expired entry
-      return null;
-    }
-
-    return entry.value;
+    return entry ? entry.value : null;
   }
 
   delete(key: K): void {
@@ -47,19 +44,19 @@ export class Cache<K, V> {
       throw new CacheError('Key must not be empty');
     }
 
-    if (!this.storage.delete(key)) {
-      throw new CacheError(`Key \"${key}\" does not exist in cache`);
-    }
+    this.storage.delete(key);
+    this.ttlManager.clearTTL(key);
   }
-
   clear(): void {
     this.storage.clear();
+    this.ttlManager.clearAll();
   }
 
   has(key: K): boolean {
-    return this.storage.has(key);
+    return this.storage.has(key) && !this.ttlManager.isExpired(key);
   }
+
   size(): number {
-    return this.storage.size;
+    return Array.from(this.storage.keys()).filter((key) => !this.ttlManager.isExpired(key)).length;
   }
 }

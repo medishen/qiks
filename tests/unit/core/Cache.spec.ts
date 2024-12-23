@@ -59,10 +59,6 @@ describe('Cache Class', () => {
     it('should throw an error for empty keys on delete', () => {
       expect(() => cache.delete('')).to.throw(CacheError, 'Key must not be empty');
     });
-
-    it('should throw an error when deleting a non-existent key', () => {
-      expect(() => cache.delete('non-existent')).to.throw(CacheError, 'Key "non-existent" does not exist in cache');
-    });
   });
 
   describe('Edge Cases', () => {
@@ -186,5 +182,4 @@ describe('Cache Class', () => {
       expect(cache.get(spacedKey)).to.equal(42);
     });
   });
-
 });
