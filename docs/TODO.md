@@ -29,8 +29,8 @@
 
 2. **TTL (Time-to-Live) Support**
 
-   - [ ] Add TTL expiration logic to cached items.
-   - [ ] Write tests to validate expiration functionality.
+   - [x] Add TTL expiration logic to cached items.
+   - [x] Write tests to validate expiration functionality.
 
 3. **Serialization**
 
