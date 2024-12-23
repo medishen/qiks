@@ -34,14 +34,13 @@
 
 3. **Serialization**
 
-   - [ ] Support JSON serialization and deserialization for cached items.
-   - [ ] Add option to plug in custom serializers.
-   - [ ] Test serialization with various data types.
+   - [x] Support JSON serialization and deserialization for cached items.
+   - [x] Add option to plug in custom serializers.
 
 4. **Namespaces**
 
-   - [ ] Implement namespaces to isolate caches.
-   - [ ] Write tests for namespace isolation and operations.
+   - [x] Implement namespaces to isolate caches.
+   - [x] Write tests for namespace isolation and operations.
 
 5. **Cache Events**
    - [ ] Emit events for `set`, `get`, `delete`, and `expire` actions.

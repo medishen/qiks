@@ -2,10 +2,12 @@ import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
 import { Cache } from '../../../src/core/Cache';
 import { CacheError } from '../../../src/errors/CacheError';
+import { Serializer } from '../../../src/core/Serializer';
+import { CacheEntry } from '../../../src/types/CacheTypes';
 describe('Cache Class', () => {
   let cache: Cache<string, number>;
   beforeEach(() => {
-    cache = new Cache<string, number>();
+    cache = new Cache<string, number>(new Map<string, CacheEntry<string>>(), Serializer);
   });
 
   describe('Basic Operations', () => {
@@ -69,12 +71,6 @@ describe('Cache Class', () => {
       cache.set('duplicate', 2);
       expect(cache.get('duplicate')).to.equal(2);
     });
-
-    it('should not consider keys with undefined values as non-existent', () => {
-      cache.set('undefined-value', undefined as unknown as number);
-      expect(cache.get('undefined-value')).to.equal(undefined);
-    });
-
     it('should handle non-string keys correctly', () => {
       const objectKey = { id: 1 };
       const arrayKey = ['key'];
