@@ -24,8 +24,8 @@
 
 1. **Basic In-Memory Caching**
 
-   - [ ] Implement simple in-memory cache with hash map storage.
-   - [ ] Add unit tests for basic operations.
+   - [x] Implement simple in-memory cache with hash map storage.
+   - [x] Add unit tests for basic operations.
 
 2. **TTL (Time-to-Live) Support**
 
