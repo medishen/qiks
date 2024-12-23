@@ -10,3 +10,5 @@ export interface SerializerType {
   serialize<V>(data: V): string;
   deserialize<V>(data: string): V;
 }
+export type CacheEvent = 'set' | 'get' | 'delete' | 'expire';
+export type EventCallback<K, V> = (key: K, value?: V) => void;

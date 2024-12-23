@@ -43,8 +43,8 @@
    - [x] Write tests for namespace isolation and operations.
 
 5. **Cache Events**
-   - [ ] Emit events for `set`, `get`, `delete`, and `expire` actions.
-   - [ ] Write tests to ensure events are emitted correctly.
+   - [x] Emit events for `set`, `get`, `delete`, and `expire` actions.
+   - [x] Write tests to ensure events are emitted correctly.
 
 #### Phase 2: Intermediate Features
 
