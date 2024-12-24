@@ -1,6 +1,6 @@
 import { CacheError } from '../errors/CacheError';
 
-export class Serializer<V> {
+export class Serializer {
   static serialize<V>(data: V): string {
     try {
       return JSON.stringify(data);
