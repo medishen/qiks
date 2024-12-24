@@ -26,7 +26,8 @@ export class Cache<K, V> {
     }
 
     const entry = this.storage.get(key);
-    if (!entry || this.ttlManager.isExpired(entry)) {
+    if (!entry) return null;
+    if (this.ttlManager.isExpired(entry)) {
       this.storage.delete(key);
       this.event.emit('expire', key);
       return null;

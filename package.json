@@ -11,8 +11,9 @@
   "scripts": {
     "test": "npm run test:unit & npm run test:e2e & npm run test:performance",
     "test:unit": "mocha --require ts-node/register tests/unit/**/*.spec.ts",
+    "test:integration": "mocha --require ts-node/register tests/integration/**/*.spec.ts",
     "test:e2e": "mocha --require ts-node/register tests/e2e/*.spec.ts",
-    "test:performance": "mocha --require ts-node/register tests/performance/*.spec.ts"
+    "test:performance": "mocha --require ts-node/register tests/performance/**/*.spec.ts"
   },
   "repository": {
     "type": "git",

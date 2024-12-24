@@ -15,6 +15,9 @@ export class NamespaceManager {
 }
 export class NamespaceCache<K, V> extends Cache<string, V> {
   constructor(private parentStorage: Map<string, CacheEntry<string>>, private namespace: string, serializer: SerializerType) {
+    if (!namespace) {
+      throw new CacheError('Namespace name must not be empty');
+    }
     super(parentStorage, serializer);
   }
 
