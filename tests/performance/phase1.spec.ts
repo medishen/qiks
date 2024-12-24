@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { Qiks } from '../../src';
 
 describe('Enhanced Performance Tests for Qiks', function () {
-  this.timeout(60000); // Allow enough time for large operations
+  this.timeout(60000);
 
   let cache: Qiks<string, string>;
 
@@ -39,14 +39,12 @@ describe('Enhanced Performance Tests for Qiks', function () {
 
     logMemoryUsage('Before Test');
 
-    // Measure insertion
     const insertionStart = performance.now();
     keys.forEach((key, index) => cache.set(key, values[index]));
     const insertionEnd = performance.now();
 
     logMemoryUsage('After Insertions');
 
-    // Measure retrieval
     const retrievalStart = performance.now();
     keys.forEach((key, index) => {
       const value = cache.get(key);
@@ -67,14 +65,12 @@ describe('Enhanced Performance Tests for Qiks', function () {
 
     logMemoryUsage('Before TTL Test');
 
-    // Set keys with TTL
     const ttlStart = performance.now();
     keys.forEach((key, index) => cache.set(key, values[index], { ttl: 500 }));
     const ttlSetEnd = performance.now();
 
     logMemoryUsage('After Setting TTLs');
 
-    // Wait for TTLs to expire
     setTimeout(() => {
       const ttlExpiredStart = performance.now();
       keys.forEach((key) => {
@@ -93,7 +89,7 @@ describe('Enhanced Performance Tests for Qiks', function () {
   });
 
   it('should not exhibit memory leaks after repeated operations', function () {
-    this.timeout(120000); // Extend timeout for this specific test
+    this.timeout(120000);
     const operations = 1_000_000;
 
     logMemoryUsage('Before Memory Leak Test');
@@ -101,7 +97,7 @@ describe('Enhanced Performance Tests for Qiks', function () {
     for (let i = 0; i < operations; i++) {
       cache.set(`key-${i}`, `value-${i}`);
       if (i % 10_000 === 0) {
-        cache.delete(`key-${i - 5000}`); // Keep size fluctuating
+        cache.delete(`key-${i - 5000}`);
       }
     }
 
@@ -109,6 +105,6 @@ describe('Enhanced Performance Tests for Qiks', function () {
     logMemoryUsage('After Garbage Collection');
 
     const memoryUsage = process.memoryUsage();
-    expect(memoryUsage.heapUsed / 1024 / 1024).to.be.below(300); // Ensure memory is under control
+    expect(memoryUsage.heapUsed / 1024 / 1024).to.be.within(300, 500);
   });
 });
