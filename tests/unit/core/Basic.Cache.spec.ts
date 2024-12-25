@@ -3,11 +3,18 @@ import { expect } from 'chai';
 import { Cache } from '../../../src/core/Cache';
 import { CacheError } from '../../../src/errors/CacheError';
 import { Serializer } from '../../../src/core/Serializer';
-import { CacheEntry } from '../../../src/types/CacheTypes';
-describe('Cache Class', () => {
+import { CacheItem } from '../../../src/types/CacheTypes';
+import { createStorageAdapter } from '../../../src/utils';
+describe('Cache Class - Basic Tests', () => {
   let cache: Cache<string, number>;
   beforeEach(() => {
-    cache = new Cache<string, number>(new Map<string, CacheEntry<string>>(), Serializer);
+    const rawStorage = new Map<string, CacheItem<string>>();
+    const storage = createStorageAdapter<string, CacheItem<string>>(rawStorage);
+    cache = new Cache({
+      serializer: Serializer,
+      storage,
+      policy: 'LRU',
+    });
   });
 
   describe('Basic Operations', () => {

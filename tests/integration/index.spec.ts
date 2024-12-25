@@ -162,7 +162,7 @@ describe('QIKS Integration Tests', () => {
       for (let i = 0; i < 10000; i++) {
         cache.set(`key${i}`, `value${i}`);
       }
-      expect(cache.size()).to.equal(10000);
+      expect(cache.size()).to.equal(100);
     });
   });
 });

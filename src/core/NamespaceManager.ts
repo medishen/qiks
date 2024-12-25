@@ -1,5 +1,5 @@
 import { CacheError } from '../errors/CacheError';
-import { CacheEntry, CacheOptions, SerializerType } from '../types/CacheTypes';
+import { CacheItemOptions, NamespaceCacheConfig } from '../types/CacheTypes';
 import { Cache } from './Cache';
 
 export class NamespaceManager {
@@ -14,18 +14,23 @@ export class NamespaceManager {
   }
 }
 export class NamespaceCache<K, V> extends Cache<string, V> {
-  constructor(private parentStorage: Map<string, CacheEntry<string>>, private namespace: string, serializer: SerializerType) {
+  constructor(private config: NamespaceCacheConfig<K, V>) {
+    const { parentStorage, namespace, serializer, policy } = config;
     if (!namespace) {
       throw new CacheError('Namespace name must not be empty');
     }
-    super(parentStorage, serializer);
+    super({
+      storage: parentStorage,
+      serializer: serializer,
+      policy: policy,
+    });
   }
 
   private getCompoundKey(key: string): string {
-    return NamespaceManager.createCompoundKey(this.namespace, key);
+    return NamespaceManager.createCompoundKey(this.config.namespace, key);
   }
 
-  set(key: string, value: V, options?: CacheOptions): void {
+  set(key: string, value: V, options?: CacheItemOptions): void {
     const compoundKey = this.getCompoundKey(key);
     super.set(compoundKey, value, options);
   }
@@ -41,8 +46,8 @@ export class NamespaceCache<K, V> extends Cache<string, V> {
   }
 
   clear(): void {
-    for (const compoundKey of this.parentStorage.keys()) {
-      if (compoundKey.startsWith(`${this.namespace}:`)) {
+    for (const compoundKey of this.config.parentStorage.keys()) {
+      if (compoundKey.startsWith(`${this.config.namespace}:`)) {
         super.delete(compoundKey);
       }
     }
@@ -54,6 +59,6 @@ export class NamespaceCache<K, V> extends Cache<string, V> {
   }
 
   size(): number {
-    return super.countBy(`${this.namespace}`);
+    return super.countBy(`${this.config.namespace}`);
   }
 }
