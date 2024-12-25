@@ -50,9 +50,8 @@
 
 6. **Customizable Eviction Policies**
 
-   - [ ] Implement LRU, LFU, and MRU policies.
-   - [ ] Allow custom eviction policy functions.
-   - [ ] Write tests for eviction policies with varying `maxSize`.
+   - [x] Implement LRU, LFU, and MRU policies.
+   - [x] Write tests for eviction policies with varying `maxSize`.
 
 7. **Cache Dependency Management**
 

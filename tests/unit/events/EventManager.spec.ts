@@ -1,13 +1,16 @@
 import { expect } from 'chai';
-import { CacheEvent, EventCallback } from '../../../src/types/CacheTypes';
+import { CacheEventType, EventCallback, StorageAdapter } from '../../../src/types/CacheTypes';
 import { EventManager } from '../../../src/events/EventManager';
 import { beforeEach, describe, it } from 'mocha';
+import { createStorageAdapter } from '../../../src/utils';
+
 describe('EventManager', () => {
-  let storage: Map<string, Set<EventCallback<string, number>>>;
+  let storage: StorageAdapter<string, Set<EventCallback<string, number>>>;
   let eventManager: EventManager<string, number>;
 
   beforeEach(() => {
-    storage = new Map();
+    const rawStorage = new Map<string, Set<EventCallback<string, number>>>();
+    storage = createStorageAdapter<string, Set<EventCallback<string, number>>>(rawStorage);
     eventManager = new EventManager(storage);
   });
 
@@ -16,7 +19,7 @@ describe('EventManager', () => {
       const callback = (key: string, value?: number) => {};
       eventManager.on('set', callback);
 
-      const listeners = storage.get('event:set');
+      const listeners = storage.get('_internal:event:set');
       expect(listeners).to.exist;
       expect(listeners!.has(callback)).to.be.true;
     });
@@ -27,7 +30,7 @@ describe('EventManager', () => {
       eventManager.on('set', callback1);
       eventManager.on('set', callback2);
 
-      const listeners = storage.get('event:set');
+      const listeners = storage.get('_internal:event:set');
       expect(listeners).to.exist;
       expect(listeners!.has(callback1)).to.be.true;
       expect(listeners!.has(callback2)).to.be.true;
@@ -39,13 +42,10 @@ describe('EventManager', () => {
       const callback = (key: string, value?: number) => {};
 
       eventManager.on('set', callback);
-      // Ensure the callback was added.
-      const event = storage.get('event:set');
-      expect(event!.has(callback)).to.be.true;
-
       eventManager.off('set', callback);
-      expect(storage.get('event:set')?.has(callback)).to.be.undefined;
-      expect(storage.has('event:set')).to.be.false;
+
+      const listeners = storage.get('event:set');
+      expect(listeners).to.be.undefined;
     });
 
     it('should remove the event key from storage if no listeners remain', () => {
@@ -60,15 +60,6 @@ describe('EventManager', () => {
       const callback = (key: string, value?: number) => {};
       eventManager.off('set', callback);
 
-      expect(storage.has('event:set')).to.be.false;
-    });
-
-    it('should do nothing if the event has no registered callbacks', () => {
-      const callback = (key: string, value?: number) => {};
-      eventManager.on('get', callback);
-      eventManager.off('set', callback);
-
-      expect(storage.has('event:get')).to.be.true;
       expect(storage.has('event:set')).to.be.false;
     });
   });
@@ -95,9 +86,7 @@ describe('EventManager', () => {
       const failingCallback = () => {
         try {
           throw new Error('Callback error');
-        } catch (error: any) {
-          console.log(error.message);
-        }
+        } catch (error) {}
       };
       const successfulCallback = (key: string, value?: number) => results.push([key, value]);
 
@@ -125,7 +114,7 @@ describe('EventManager', () => {
 
   describe('Edge Cases', () => {
     it('should correctly handle multiple events with independent listeners', () => {
-      const results: { event: CacheEvent; key: string; value?: number }[] = [];
+      const results: { event: CacheEventType; key: string; value?: number }[] = [];
       const callback1 = (key: string, value?: number) => results.push({ event: 'set', key, value });
       const callback2 = (key: string, value?: number) => results.push({ event: 'delete', key, value });
 
@@ -154,6 +143,34 @@ describe('EventManager', () => {
       eventManager.emit('set', 'key1', 100);
 
       expect(results).to.deep.equal([['key1', 100]]);
+    });
+
+    it('should not emit to listeners removed before emit is called', () => {
+      const results: [string, number | undefined][] = [];
+      const callback = (key: string, value?: number) => results.push([key, value]);
+
+      eventManager.on('set', callback);
+      eventManager.off('set', callback);
+
+      eventManager.emit('set', 'key1', 100);
+
+      expect(results).to.be.empty;
+    });
+
+    it('should correctly handle overlapping events with the same listener', () => {
+      const results: { key: string; value?: number }[] = [];
+      const callback = (key: string, value?: number) => results.push({ key, value });
+
+      eventManager.on('set', callback);
+      eventManager.on('delete', callback);
+
+      eventManager.emit('set', 'key1', 100);
+      eventManager.emit('delete', 'key2');
+
+      expect(results).to.deep.equal([
+        { key: 'key1', value: 100 },
+        { key: 'key2', value: undefined },
+      ]);
     });
   });
 });

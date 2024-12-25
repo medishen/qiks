@@ -1,22 +1,34 @@
 import { CacheError } from '../errors/CacheError';
 import { EventManager } from '../events/EventManager';
-import { CacheEntry, CacheEvent, CacheOptions, EventCallback, SerializerType } from '../types/CacheTypes';
+import { CacheEventType, CacheItemOptions, CacheConfig, StorageAdapter, CacheItem, EventCallback } from '../types/CacheTypes';
+import { EvictionPolicy } from '../types/EvictionPolicy';
 import { TTLManager } from './TTLManager';
+import { initializeEvictionPolicy, isInternalKey, isWeak, validateKey, validateOptions } from '../utils';
 export class Cache<K, V> {
+  private evictionPolicy: EvictionPolicy<K>;
   protected ttlManager: TTLManager;
   protected event: EventManager<K, V>;
-  constructor(protected storage: Map<K, CacheEntry<string>> = new Map(), protected serializer: SerializerType) {
-    this.ttlManager = new TTLManager();
-    this.event = new EventManager<K, V>(storage as unknown as Map<string, Set<EventCallback<K, V>>>);
-  }
+  private storage: StorageAdapter<K, CacheItem<string>>;
+  private isWeakStorage: boolean;
+  public static readonly INTERNAL_PREFIX = '_internal:';
 
-  set(key: K, value: V, options?: CacheOptions): void {
-    if (!key) {
-      throw new CacheError('Key must not be empty');
+  constructor(protected options: CacheConfig<K>) {
+    validateOptions(this.options);
+    this.storage = this.options.storage;
+    this.isWeakStorage = isWeak(this.storage);
+    this.evictionPolicy = initializeEvictionPolicy(this.options);
+    this.ttlManager = new TTLManager();
+    this.event = new EventManager<K, V>(this.storage as unknown as StorageAdapter<string, Set<EventCallback<K, V>>>);
+  }
+  set(key: K, value: V, options?: CacheItemOptions): void {
+    validateKey(key);
+    if (this.getUserKeyCount() >= (this.options.maxSize ?? Infinity)) {
+      this.evictionPolicy.evict();
     }
-    const serializedValue = this.serializer.serialize<V>(value);
+
+    const serializedValue = this.options.serializer!.serialize<V>(value);
     const expiry = options?.ttl ? this.ttlManager.setTTL(options.ttl) : null;
-    this.storage.set(key, { value: serializedValue, expiry });
+    this.evictionPolicy.onInsert(key, { value: serializedValue, expiry });
     this.event.emit('set', key, value);
   }
 
@@ -25,61 +37,71 @@ export class Cache<K, V> {
       throw new CacheError('Key must not be empty');
     }
 
-    const entry = this.storage.get(key);
+    const entry = this.options.storage.get(key);
     if (!entry) return null;
     if (this.ttlManager.isExpired(entry)) {
-      this.storage.delete(key);
+      this.evictionPolicy.onRemove(key);
       this.event.emit('expire', key);
       return null;
     }
-    const deserializedValue = this.serializer.deserialize<V>(entry.value);
+
+    const deserializedValue = this.options.serializer!.deserialize<V>(entry.value);
+    this.evictionPolicy.onAccess(key);
     this.event.emit('get', key, deserializedValue);
     return deserializedValue;
   }
 
   delete(key: K): void {
-    if (!key) {
-      throw new CacheError('Key must not be empty');
-    }
-    const entry = this.storage.get(key);
+    validateKey(key);
+
+    const entry = this.options.storage.get(key);
     if (entry) {
-      const value = this.serializer.deserialize<V>(entry.value);
+      const value = this.options.serializer!.deserialize<V>(entry.value);
+      this.evictionPolicy.onRemove(key);
       this.event.emit('delete', key, value);
     }
-    this.storage.delete(key);
   }
 
   clear(): void {
-    this.storage.clear();
+    this.storage.clear?.();
   }
 
   has(key: K): boolean {
-    const entry = this.storage.get(key);
+    const entry = this.options.storage.get(key);
     return !!entry && !this.ttlManager.isExpired(entry);
   }
 
   size(): number {
-    return Array.from(this.storage.entries()).reduce((count, [key, entry]) => {
-      if (!this.ttlManager.isExpired(entry)) count++;
-      return count;
-    }, 0);
+    return this.getUserKeyCount();
+  }
+
+  private getUserKeyCount(): number {
+    if (this.isWeakStorage) {
+    }
+    let count = 0;
+    for (const key of this.storage.keys()) {
+      if (!isInternalKey(key)) {
+        count++;
+      }
+    }
+    return count;
   }
   countBy(prefix: string | null = null): number {
-    if (!prefix) {
-      return this.size();
-    }
-    return Array.from(this.storage.entries()).reduce((count, [key, entry]) => {
+    if (!prefix) return this.size();
+
+    let count = 0;
+    for (const [key, entry] of this.storage.entries()) {
       if (typeof key === 'string' && key.startsWith(`${prefix}:`) && !this.ttlManager.isExpired(entry)) {
         count++;
       }
-      return count;
-    }, 0);
+    }
+    return count;
   }
-  on(event: CacheEvent, callback: (key: K, value?: V) => void): void {
+  on(event: CacheEventType, callback: (key: K, value?: V) => void): void {
     this.event.on(event, callback);
   }
 
-  off(event: CacheEvent, callback: (key: K, value?: V) => void): void {
+  off(event: CacheEventType, callback: (key: K, value?: V) => void): void {
     this.event.off(event, callback);
   }
 }

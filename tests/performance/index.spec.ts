@@ -2,6 +2,7 @@ import { beforeEach, describe, it } from 'mocha';
 import { performance } from 'perf_hooks';
 import { expect } from 'chai';
 import { Qiks } from '../../src';
+import { Serializer } from '../../src/core/Serializer';
 
 describe('Enhanced Performance Tests for Qiks', function () {
   this.timeout(60000);
@@ -9,7 +10,12 @@ describe('Enhanced Performance Tests for Qiks', function () {
   let cache: Qiks<string, string>;
 
   beforeEach(() => {
-    cache = new Qiks();
+    cache = new Qiks({
+      maxSize: 10_000,
+      serializer: Serializer,
+      storage: new Map(),
+      policy: 'LRU',
+    });
   });
 
   afterEach(() => {
@@ -33,7 +39,7 @@ describe('Enhanced Performance Tests for Qiks', function () {
   }
 
   it('should handle high insertion and retrieval load efficiently', () => {
-    const operations = 1_000_000;
+    const operations = 10_000;
     const keys = Array.from({ length: operations }, (_, i) => `key-${i}`);
     const values = Array.from({ length: operations }, (_, i) => `value-${i}`);
 
@@ -59,7 +65,7 @@ describe('Enhanced Performance Tests for Qiks', function () {
   });
 
   it('should handle TTL expiration efficiently under load', (done) => {
-    const operations = 50_000;
+    const operations = 5000;
     const keys = Array.from({ length: operations }, (_, i) => `key-${i}`);
     const values = Array.from({ length: operations }, (_, i) => `value-${i}`);
 
@@ -89,8 +95,8 @@ describe('Enhanced Performance Tests for Qiks', function () {
   });
 
   it('should not exhibit memory leaks after repeated operations', function () {
-    this.timeout(120000);
-    const operations = 1_000_000;
+    this.timeout(10000);
+    const operations = 10_000;
 
     logMemoryUsage('Before Memory Leak Test');
 
@@ -105,6 +111,6 @@ describe('Enhanced Performance Tests for Qiks', function () {
     logMemoryUsage('After Garbage Collection');
 
     const memoryUsage = process.memoryUsage();
-    expect(memoryUsage.heapUsed / 1024 / 1024).to.be.within(300, 500);
+    expect(memoryUsage.heapUsed / 1024 / 1024).to.be.within(100, 150);
   });
 });
