@@ -1,3 +1,4 @@
+import { Serializer } from '../core/Serializer';
 import { CacheItem, StorageAdapter } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
 
@@ -20,6 +21,11 @@ export class MRU<K> implements EvictionPolicy<K> {
     const keys = Array.from(this.storage.keys());
     const mostRecentKey = keys[keys.length - 1];
     if (mostRecentKey !== undefined) {
+      const entry = this.storage.get(mostRecentKey);
+      if (entry && entry.onExpire) {
+        const deserializedValue = Serializer.deserialize(entry.value);
+        entry.onExpire(mostRecentKey, deserializedValue);
+      }
       this.storage.delete(mostRecentKey);
       return mostRecentKey;
     }

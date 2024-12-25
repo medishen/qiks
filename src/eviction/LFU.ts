@@ -1,3 +1,4 @@
+import { Serializer } from '../core/Serializer';
 import { CacheItem, StorageAdapter } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
 export class LFU<K> implements EvictionPolicy<K> {
@@ -29,6 +30,11 @@ export class LFU<K> implements EvictionPolicy<K> {
       }
     }
     if (leastFrequentKey !== null) {
+      const entry = this.storage.get(leastFrequentKey);
+      if (entry && entry.onExpire) {
+        const deserializedValue = Serializer.deserialize(entry.value);
+        entry.onExpire(leastFrequentKey, deserializedValue);
+      }
       this.storage.delete(leastFrequentKey);
       return leastFrequentKey;
     }

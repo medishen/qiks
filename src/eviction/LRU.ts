@@ -1,3 +1,4 @@
+import { Serializer } from '../core/Serializer';
 import { CacheItem, StorageAdapter } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
 
@@ -24,6 +25,11 @@ export class LRU<K> implements EvictionPolicy<K> {
     const keys = this.storage.keys();
     const oldestKey = keys.next().value;
     if (oldestKey !== undefined) {
+      const entry = this.storage.get(oldestKey);
+      if (entry && entry.onExpire) {
+        const deserializedValue = Serializer.deserialize(entry.value);
+        entry.onExpire(oldestKey, deserializedValue);
+      }
       this.storage.delete(oldestKey);
       return oldestKey;
     }
