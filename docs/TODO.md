@@ -55,18 +55,18 @@
 
 7. **Cache Dependency Management**
 
-   - [ ] Allow items to depend on other keys.
-   - [ ] Automatically delete dependent keys when the parent is deleted.
-   - [ ] Write tests for dependency chains.
+   - [x] Allow items to depend on other keys.
+   - [x] Automatically delete dependent keys when the parent is deleted.
+   - [x] Write tests for dependency chains.
 
 8. **Expiration Callbacks**
 
-   - [ ] Add support for callbacks triggered on item expiration.
-   - [ ] Test callback execution under various scenarios.
+   - [x] Add support for callbacks triggered on item expiration.
+   - [x] Test callback execution under various scenarios.
 
 9. **Key Observers**
-   - [ ] Allow observing changes to specific keys.
-   - [ ] Test observer callbacks for correctness.
+   - [x] Allow observing changes to specific keys.
+   - [x] Test observer callbacks for correctness.
 
 #### Phase 3: Advanced Features
 

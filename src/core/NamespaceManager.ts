@@ -30,7 +30,7 @@ export class NamespaceCache<K, V> extends Cache<string, V> {
     return NamespaceManager.createCompoundKey(this.config.namespace, key);
   }
 
-  set(key: string, value: V, options?: CacheItemOptions): void {
+  set(key: string, value: V, options?: CacheItemOptions<string,V>): void {
     const compoundKey = this.getCompoundKey(key);
     super.set(compoundKey, value, options);
   }

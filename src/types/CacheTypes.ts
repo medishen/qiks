@@ -2,10 +2,13 @@ export interface CacheItem<V> {
   value: V;
   expiry?: number | null;
   frequency?: number;
+  onExpire?: (key: any, value: V) => void;
 }
 
-export interface CacheItemOptions {
+export interface CacheItemOptions<K, V> {
   ttl?: number;
+  dependsOn?: K;
+  onExpire?: (key: K, value: V) => void;
 }
 export interface CacheSerializer {
   serialize<V>(data: V): string;
