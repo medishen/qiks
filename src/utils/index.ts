@@ -1,4 +1,6 @@
 import { Cache } from '../core/Cache';
+import { DependencyManager } from '../core/managers/DependencyManager';
+import { Serializer } from '../core/managers/Serializer';
 import { CacheError } from '../errors/CacheError';
 import { LFU } from '../eviction/LFU';
 import { LRU } from '../eviction/LRU';
@@ -121,4 +123,21 @@ export function createStorageAdapter<K, V>(storage: any): StorageAdapter<K, V> {
 
 export function isWeak<K>(storage: StorageAdapter<K, CacheItem<string>>): boolean {
   return storage.type === 'WeakMap';
+}
+export function expireKeyRecursively<K, V>(opts: { key: K; storage: StorageAdapter<K, CacheItem<string>>; dependencyManager: DependencyManager<K, V>; evictionPolicy: EvictionPolicy<K> }): void {
+  const entry = opts.storage.get(opts.key);
+  if (!entry) return;
+  if (entry.onExpire) {
+    const deserializedValue = Serializer.deserialize<string>(entry.value);
+    entry.onExpire(opts.key, deserializedValue);
+  }
+  const dependents = opts.dependencyManager.getDependents(opts.key);
+  if (dependents) {
+    for (const dependentKey of dependents) {
+      expireKeyRecursively<K, V>({ key: dependentKey, dependencyManager: opts.dependencyManager, evictionPolicy: opts.evictionPolicy, storage: opts.storage });
+    }
+  }
+  opts.dependencyManager.clearDependencies(opts.key);
+  opts.evictionPolicy.onRemove(opts.key);
+  opts.storage.delete(opts.key);
 }

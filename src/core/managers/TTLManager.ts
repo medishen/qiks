@@ -1,5 +1,5 @@
-import { CacheError } from '../errors/CacheError';
-import { CacheItem } from '../types/CacheTypes';
+import { CacheError } from '../../errors/CacheError';
+import { CacheItem } from '../../types/CacheTypes';
 
 export class TTLManager {
   setTTL(ttl: number): number {

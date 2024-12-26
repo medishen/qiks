@@ -1,8 +1,8 @@
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
-import { TTLManager } from '../../../src/core/TTLManager';
-import { CacheItem } from '../../../src/types/CacheTypes';
-import { CacheError } from '../../../src/errors/CacheError';
+import { TTLManager } from '../../../../src/core/managers/TTLManager';
+import { CacheItem } from '../../../../src/types/CacheTypes';
+import { CacheError } from '../../../../src/errors/CacheError';
 
 describe('TTLManager', () => {
   let ttlManager: TTLManager;

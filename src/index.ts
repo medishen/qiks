@@ -1,7 +1,7 @@
-import { Serializer } from './core/Serializer';
+import { Serializer } from './core/managers/Serializer';
 import { Cache } from './core/Cache';
 import { CacheConfigQiks, CacheItem } from './types/CacheTypes';
-import { NamespaceCache } from './core/NamespaceManager';
+import { NamespaceCache } from './core/managers/NamespaceManager';
 import { createStorageAdapter } from './utils';
 export class Qiks<K, V> extends Cache<string, V> {
   constructor(

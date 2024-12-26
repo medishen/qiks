@@ -1,4 +1,4 @@
-import { Serializer } from '../core/Serializer';
+import { Serializer } from '../core/managers/Serializer';
 import { CacheItem, StorageAdapter } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
 

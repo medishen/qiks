@@ -2,6 +2,7 @@ export interface CacheItem<V> {
   value: V;
   expiry?: number | null;
   frequency?: number;
+  dependents?: Set<string>;
   onExpire?: (key: any, value: V) => void;
 }
 

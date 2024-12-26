@@ -2,7 +2,7 @@
   "name": "@medishen/qiks",
   "version": "1.0.0",
   "description": "small cache system",
-  "main": "tsconfig.js",
+  "main": "src/index.js",
   "directories": {
     "doc": "docs",
     "example": "examples",

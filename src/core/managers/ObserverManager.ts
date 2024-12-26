@@ -1,6 +1,6 @@
-import { CacheError } from '../errors/CacheError';
-import { EventCallback, StorageAdapter } from '../types/CacheTypes';
-import { validateKey } from '../utils';
+import { CacheError } from '../../errors/CacheError';
+import { EventCallback, StorageAdapter } from '../../types/CacheTypes';
+import { validateKey } from '../../utils';
 export class ObserverManager<K, V> {
   constructor(private storage: StorageAdapter<K, any>) {}
   observeKey(key: K, callback: EventCallback<K, V>): void {

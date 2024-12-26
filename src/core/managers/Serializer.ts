@@ -1,4 +1,4 @@
-import { CacheError } from '../errors/CacheError';
+import { CacheError } from '../../errors/CacheError';
 
 export class Serializer {
   static serialize<V>(data: V): string {

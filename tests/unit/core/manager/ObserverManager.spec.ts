@@ -1,9 +1,9 @@
 import { expect } from 'chai';
-import { CacheItem, StorageAdapter } from '../../../src/types/CacheTypes';
-import { ObserverManager } from '../../../src/core/ObserverManager';
+import { CacheItem, StorageAdapter } from '../../../../src/types/CacheTypes';
+import { ObserverManager } from '../../../../src/core/managers/ObserverManager';
 import { beforeEach, describe, it } from 'mocha';
-import { createStorageAdapter } from '../../../src/utils';
-import { CacheError } from '../../../src/errors/CacheError';
+import { createStorageAdapter } from '../../../../src/utils';
+import { CacheError } from '../../../../src/errors/CacheError';
 
 describe('ObserverManager', () => {
   let storage: StorageAdapter<string, any>;
