@@ -2,7 +2,7 @@ import { beforeEach, describe, it } from 'mocha';
 import { performance } from 'perf_hooks';
 import { expect } from 'chai';
 import { Qiks } from '../../src';
-import { Serializer } from '../../src/core/Serializer';
+import { Serializer } from '../../src/core/managers/Serializer';
 
 describe('Enhanced Performance Tests for Qiks', function () {
   this.timeout(60000);

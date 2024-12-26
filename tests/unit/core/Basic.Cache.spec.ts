@@ -2,7 +2,7 @@ import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
 import { Cache } from '../../../src/core/Cache';
 import { CacheError } from '../../../src/errors/CacheError';
-import { Serializer } from '../../../src/core/Serializer';
+import { Serializer } from '../../../src/core/managers/Serializer';
 import { CacheItem } from '../../../src/types/CacheTypes';
 import { createStorageAdapter } from '../../../src/utils';
 describe('Cache Class - Basic Tests', () => {

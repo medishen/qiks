@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { Qiks } from '../../src/index';
 import { CacheError } from '../../src/errors/CacheError';
-import { NamespaceCache } from '../../src/core/NamespaceManager';
+import { NamespaceCache } from '../../src/core/managers/NamespaceManager';
 import { beforeEach, describe, it } from 'mocha';
 
 describe('QIKS Integration Tests', () => {

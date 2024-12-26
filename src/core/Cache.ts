@@ -2,9 +2,10 @@ import { CacheError } from '../errors/CacheError';
 import { EventManager } from '../events/EventManager';
 import { CacheEventType, CacheItemOptions, CacheConfig, StorageAdapter, CacheItem, EventCallback } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
-import { TTLManager } from './TTLManager';
-import { initializeEvictionPolicy, isInternalKey, isWeak, validateKey, validateOptions } from '../utils';
-import { ObserverManager } from './ObserverManager';
+import { TTLManager } from './managers/TTLManager';
+import { expireKeyRecursively, initializeEvictionPolicy, isInternalKey, isWeak, validateKey, validateOptions } from '../utils';
+import { ObserverManager } from './managers/ObserverManager';
+import { DependencyManager } from './managers/DependencyManager';
 export class Cache<K, V> {
   private evictionPolicy: EvictionPolicy<K>;
   protected ttlManager: TTLManager;
@@ -12,7 +13,7 @@ export class Cache<K, V> {
   protected storage: StorageAdapter<K, CacheItem<string>>;
   private isWeakStorage: boolean;
   public static readonly INTERNAL_PREFIX = '_internal:';
-  private dependencyMap: Map<K, Set<K>> = new Map();
+  private dependencyManager: DependencyManager<K, V>;
   protected observerManager: ObserverManager<K, V>;
   constructor(protected options: CacheConfig<K>) {
     validateOptions(this.options);
@@ -22,6 +23,7 @@ export class Cache<K, V> {
     this.ttlManager = new TTLManager();
     this.event = new EventManager<K, V>(this.storage as unknown as StorageAdapter<string, Set<EventCallback<K, V>>>);
     this.observerManager = new ObserverManager<K, V>(this.storage);
+    this.dependencyManager = new DependencyManager(this.storage);
   }
   set(key: K, value: V, options?: CacheItemOptions<K, V>): void {
     validateKey(key);
@@ -38,11 +40,7 @@ export class Cache<K, V> {
         throw new CacheError(`Parent key "${parentKey}" does not exist.`);
       }
 
-      if (!this.dependencyMap.has(parentKey)) {
-        this.dependencyMap.set(parentKey, new Set());
-      }
-
-      this.dependencyMap.get(parentKey)!.add(key);
+      this.dependencyManager.addDependency(parentKey, key);
     }
     const cacheItem: CacheItem<string> = {
       value: serializedValue,
@@ -66,18 +64,14 @@ export class Cache<K, V> {
         entry.onExpire(key, deserializedValue);
       }
       // Handle dependent keys
-      const dependents = this.dependencyMap.get(key);
+      // Expire all dependents recursively
+      const dependents = this.dependencyManager.getDependents(key);
       if (dependents) {
         for (const dependentKey of dependents) {
-          const dependentEntry = this.options.storage.get(dependentKey);
-          if (dependentEntry?.onExpire) {
-            const dependentValue = this.options.serializer!.deserialize<string>(dependentEntry.value);
-            dependentEntry.onExpire(dependentKey, dependentValue);
-          }
-          this.evictionPolicy.onRemove(dependentKey);
+          expireKeyRecursively<K, V>({ key: dependentKey, dependencyManager: this.dependencyManager, evictionPolicy: this.evictionPolicy, storage: this.storage });
         }
-        this.dependencyMap.delete(key);
       }
+      this.dependencyManager.clearDependencies(key);
       this.evictionPolicy.onRemove(key);
       this.event.emit('expire', key);
       return null;
@@ -87,28 +81,26 @@ export class Cache<K, V> {
     this.event.emit('get', key, deserializedValue);
     return deserializedValue;
   }
-
   delete(key: K): void {
     validateKey(key);
 
     const entry = this.options.storage.get(key);
-    if (entry) {
-      if (entry.onExpire) {
-        const deserializedValue = this.options.serializer!.deserialize<string>(entry.value);
-        entry.onExpire(key, deserializedValue);
-      }
-      const value = this.options.serializer!.deserialize<V>(entry.value);
-      this.evictionPolicy.onRemove(key);
-      this.event.emit('delete', key, value);
-      this.observerManager.triggerObservers(key, value);
+    if (!entry) return;
+    if (entry.onExpire) {
+      const deserializedValue = this.options.serializer!.deserialize<string>(entry.value);
+      entry.onExpire(key, deserializedValue);
     }
-    const dependents = this.dependencyMap.get(key);
+    const dependents = this.dependencyManager.getDependents(key);
     if (dependents) {
       for (const dependentKey of dependents) {
         this.delete(dependentKey);
       }
-      this.dependencyMap.delete(key);
     }
+    const value = this.options.serializer!.deserialize<V>(entry.value);
+    this.observerManager.triggerObservers(key, value);
+    this.dependencyManager.clearDependencies(key);
+    this.evictionPolicy.onRemove(key);
+    this.event.emit('delete', key, value);
   }
 
   clear(): void {

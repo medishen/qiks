@@ -1,6 +1,6 @@
-import { CacheError } from '../errors/CacheError';
-import { CacheItemOptions, NamespaceCacheConfig } from '../types/CacheTypes';
-import { Cache } from './Cache';
+import { CacheError } from '../../errors/CacheError';
+import { CacheItemOptions, NamespaceCacheConfig } from '../../types/CacheTypes';
+import { Cache } from '../Cache';
 
 export class NamespaceManager {
   static createCompoundKey(namespace: string, key: string): string {
@@ -30,7 +30,7 @@ export class NamespaceCache<K, V> extends Cache<string, V> {
     return NamespaceManager.createCompoundKey(this.config.namespace, key);
   }
 
-  set(key: string, value: V, options?: CacheItemOptions<string,V>): void {
+  set(key: string, value: V, options?: CacheItemOptions<string, V>): void {
     const compoundKey = this.getCompoundKey(key);
     super.set(compoundKey, value, options);
   }

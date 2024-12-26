@@ -2,7 +2,7 @@ import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
 import { Cache } from '../../../src/core/Cache';
 import { CacheError } from '../../../src/errors/CacheError';
-import { Serializer } from '../../../src/core/Serializer';
+import { Serializer } from '../../../src/core/managers/Serializer';
 import { CacheItem, EventCallback, StorageAdapter } from '../../../src/types/CacheTypes';
 import { createStorageAdapter } from '../../../src/utils';
 
@@ -240,7 +240,7 @@ describe('Cache Class - Advanced Tests', () => {
     const onExpireSpy = (key: string, value: string | null) => {
       expiredKeys.push(key);
       if (expiredKeys.length === 3) {
-        expect(expiredKeys).to.include.members(['parent', 'child1', 'child2']);
+        expect(expiredKeys).to.have.members(['parent', 'child1', 'child2']);
         done();
       }
     };
@@ -297,12 +297,7 @@ describe('Cache Class - Advanced Tests', () => {
       it('should throw an error if the key does not exist when observing', () => {
         const key = 'user:1';
         const callback: EventCallback<string, string> = () => {};
-
-        console.log('Cache state before observing:', mapStorage);
-
         expect(() => cache.observeKey(key, callback)).to.throw(CacheError, `Key "${key}" does not exist in the cache.`);
-
-        console.log('Cache state after observing attempt:', mapStorage);
       });
 
       it('should throw an error if the observer is already registered for the key', () => {

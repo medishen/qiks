@@ -1,9 +1,9 @@
 import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
-import { CacheItem, StorageAdapter } from '../../../src/types/CacheTypes';
-import { NamespaceCache } from '../../../src/core/NamespaceManager';
-import { createStorageAdapter } from '../../../src/utils';
-import { CacheError } from '../../../src/errors/CacheError';
+import { CacheItem, StorageAdapter } from '../../../../src/types/CacheTypes';
+import { createStorageAdapter } from '../../../../src/utils';
+import { CacheError } from '../../../../src/errors/CacheError';
+import { NamespaceCache } from '../../../../src/core/managers/NamespaceManager';
 describe('NamespaceCache', () => {
   let storage: StorageAdapter<string, CacheItem<string>>;
   let namespaceCache: NamespaceCache<string, object>;
