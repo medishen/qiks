@@ -13,6 +13,9 @@ A high-performance, feature-rich caching library in TypeScript designed for vers
   - [Features](#features)
     - [Core Features](#core-features)
   - [Installation](#installation)
+  - [Usage](#usage)
+    - [Basic Usage Example](#basic-usage-example)
+  - [API Documentation](#api-documentation)
   - [Contributing](#contributing)
     - [Reporting Bugs](#reporting-bugs)
   - [License](#license)
@@ -20,52 +23,84 @@ A high-performance, feature-rich caching library in TypeScript designed for vers
 
 ## Introduction
 
-Caching is a critical part of modern applications, improving performance, reducing latency, and optimizing resource usage. **QIKS** is a TypeScript-based caching library offering both simplicity and power. It is designed for applications of all scales, whether you're building a web server, managing in-memory sessions, or developing an e-commerce recommendation engine.
+Caching plays a key role in modern web applications, improving performance, reducing latency, and optimizing resource usage. **QIKS** is a lightweight, TypeScript-based caching library built for developers who need powerful and customizable caching solutions.
 
 ### Why QIKS?
 
-- Lightweight and fast.
-- Flexible and configurable to suit diverse use cases.
-- Advanced features like namespaces, customizable eviction policies, and cache events.
-- Easy to integrate into existing projects.
+- **Lightweight & Fast**: Designed with performance in mind, perfect for high-demand environments.
+- **Highly Configurable**: Flexible eviction policies, TTL support, cache namespaces, and more.
+- **Advanced Features**: Event-driven system, dependency management, and custom serialization options.
+- **TypeScript Support**: Fully typed, ensuring better developer experience and fewer errors.
 
 ## Features
 
 ### Core Features
 
-- **Basic In-Memory Caching:** Simple and efficient in-memory storage.
-- **TTL (Time-to-Live) Support:** Automatically expire cached data after a set time.
-- **Serialization:** Built-in JSON support with options for custom serializers.
-- **Namespaces:** Isolate caches for different application domains.
-- **Cache Events:** Event-driven notifications for cache actions.
-- **Customizable Eviction Policies:** Support for LRU, LFU, MRU, and custom policies.
-- **Cache Dependency Management:** Automatically manage dependent keys.
-- **Expiration Callbacks:** Execute user-defined callbacks on expiration.
-- **Key Observers:** Monitor changes to specific keys.
-- **Pattern-Based Preloading:** Preload keys based on patterns.
+- **In-Memory Caching**: Efficient and fast in-memory key-value storage.
+- **TTL (Time-To-Live)**: Automatically expires items based on the configured TTL.
+- **Custom Serialization**: Built-in JSON support with the option to provide custom serializers.
+- **Namespaces**: Create isolated cache domains for different parts of your application.
+- **Cache Events**: Listen to cache events (set, get, delete, expire, evict).
+- **Eviction Policies**: Supports LRU (Least Recently Used), LFU (Least Frequently Used), MRU (Most Recently Used)
+- **Cache Dependency Management**: Automatically handle key dependencies when other keys are modified or evicted.
+- **Expiration Callbacks**: Execute custom logic when items expire.
+- **Key Observers**: Track changes to specific cache keys.
+- **Pattern-Based Preloading**: Preload cache keys based on patterns, useful for bulk cache loading.
 
 ## Installation
 
-Install **@medishn/qiks** via npm:
+Install the package using npm:
 
 ```bash
 npm install @medishn/qiks
 ```
 
-Refer to the [docs](./docs/document/) for the complete API reference.
+## Usage
+
+### Basic Usage Example
+
+```typescript
+import { Qiks } from '@medishn/qiks';
+
+// Create a cache instance with a 5-second TTL for each item
+const cache = new Qiks<string, string>({
+  maxSize: 100, // Limit cache size to 100 items
+  policy: 'LRU', // Use Least Recently Used eviction policy
+});
+
+cache.set('user1', 'John Doe', { ttl: 5000 }); // Set a value with TTL of 5 seconds
+
+// Retrieve the value
+const user = cache.get('user1');
+console.log(user); // Output: John Doe
+
+// After 5 seconds, the cache item will be automatically expired
+setTimeout(() => {
+  const expiredUser = cache.get('user1');
+  console.log(expiredUser); // Output: undefined (since the item expired)
+}, 6000);
+```
+
+## API Documentation
+
+For complete API documentation and usage details, refer to the [API Reference](./docs/document/).
 
 ## Contributing
 
-We welcome contributions! Please follow our [Contributing Guidelines](./docs/CONTRIBUTING.md) and use conventional commits for consistency.
+We welcome contributions to improve QIKS! Please follow the [Contributing Guidelines](./docs/CONTRIBUTING.md) to ensure consistency and quality.
 
 ### Reporting Bugs
 
-If you find a bug, create an issue on our [GitHub Repository](https://github.com/medishen/qiks/issues).
+If you encounter any issues or bugs, please create a detailed issue on our [GitHub Repository](https://github.com/medishen/qiks/issues) with the following information:
+
+- Steps to reproduce the issue
+- Expected vs actual behavior
+- Relevant error messages (if any)
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
+This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for more details.
 
 ## Contact
 
-For questions, suggestions, or support, email us at [bitsgenix@gmail.com](mailto:bitsgenix@gmail.com).
+For questions, suggestions, or support, feel free to email us at [bitsgenix@gmail.com](mailto:bitsgenix@gmail.com).

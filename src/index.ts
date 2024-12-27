@@ -4,19 +4,16 @@ import { CacheConfigQiks, CacheItem } from './types/CacheTypes';
 import { NamespaceCache } from './core/managers/NamespaceManager';
 import { createStorageAdapter } from './utils';
 export class Qiks<K, V> extends Cache<string, V> {
-  constructor(
-    options: CacheConfigQiks<K> = {
-      maxSize: 100,
-      policy: 'LRU',
-      serializer: Serializer,
-      storage: new Map(),
-    },
-  ) {
-    const storage = createStorageAdapter<string, CacheItem<string>>(options.storage);
+  constructor(options: CacheConfigQiks<K> = {}) {
+    const { maxSize = 100, policy = 'LRU', serializer = Serializer, storage = new Map() } = options;
+
+    const adaptedStorage = createStorageAdapter<string, CacheItem<string>>(storage);
+
     super({
-      ...options,
-      serializer: Serializer,
-      storage: storage,
+      maxSize,
+      policy,
+      serializer,
+      storage: adaptedStorage,
     });
   }
   namespace(namespace: string): NamespaceCache<string, V> {
