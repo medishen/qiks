@@ -5,11 +5,13 @@ export interface CacheItem<V> {
   dependents?: Set<string>;
   onExpire?: (key: any, value: V) => void;
   swr?: SWRPolicy<V>;
+  priority?: number;
 }
 export interface CacheItemOptions<K, V> {
   ttl?: number;
   dependsOn?: K;
   onExpire?: (key: K, value: V) => void;
+  priority?: number;
   swr?: SWROptions<V>;
 }
 export interface SWROptions<V> {
@@ -41,16 +43,18 @@ export interface StorageAdapter<K, V> {
 export type CacheStorage<K> = Map<K, CacheItem<string>> | WeakMap<object, CacheItem<string>>;
 interface BaseCacheConfig {
   maxSize?: number;
-  serializer: CacheSerializer;
   policy?: EvictionPolicyType;
 }
 export interface CacheConfig<K> extends BaseCacheConfig {
+  serializer: CacheSerializer;
   storage: StorageAdapter<K, CacheItem<string>>;
 }
 export interface CacheConfigQiks<K> extends BaseCacheConfig {
-  storage: CacheStorage<K>;
+  serializer?: CacheSerializer;
+  storage?: CacheStorage<K>;
 }
 export interface NamespaceCacheConfig<K, V> extends BaseCacheConfig {
+  serializer: CacheSerializer;
   parentStorage: StorageAdapter<string, CacheItem<string>>;
   namespace: string;
 }

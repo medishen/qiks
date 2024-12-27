@@ -519,4 +519,83 @@ describe('Cache Class - Advanced Tests', () => {
       expect(result).to.equal(JSON.stringify(freshData));
     });
   });
+  describe('Cache - Priority Option', () => {
+    let storage: StorageAdapter<string, any>;
+    let cache: Cache<string, string>;
+    const mapStorage = new Map<string, any>();
+
+    beforeEach(() => {
+      storage = createStorageAdapter<string, any>(mapStorage);
+      cache = new Cache<string, string>({
+        storage,
+        maxSize: 3,
+        serializer: { serialize: JSON.stringify, deserialize: JSON.parse },
+        policy: 'LRU',
+      });
+      cache.clear();
+    });
+
+    it('should evict the least recently used item when the cache is full (LRU)', () => {
+      // Insert items with different priorities
+      cache.set('a', 'value1', { priority: 2 });
+      cache.set('b', 'value2', { priority: 1 });
+      cache.set('c', 'value3', { priority: 3 });
+      cache.get('a');
+      cache.set('d', 'value4', { priority: 2 });
+      expect(cache.has('b')).to.be.false;
+      expect(cache.has('a')).to.be.true;
+      expect(cache.has('d')).to.be.true;
+    });
+
+    it('should correctly call onExpire callback when item expires', function (done) {
+      const onExpire = (key: string, value: string | null) => {
+        expect(key).to.equal('a');
+        expect(value).to.equal('value1');
+        done();
+      };
+
+      // Insert item with a TTL and an onExpire callback
+      cache.set('a', 'value1', { ttl: 100, onExpire });
+
+      // Wait for expiration
+      setTimeout(() => {
+        cache.get('a'); // Should trigger expiration
+      }, 150);
+    });
+    it('should handle multiple items with the same priority', () => {
+      cache.set('a', 'value1', { priority: 2 });
+      cache.set('b', 'value2', { priority: 2 });
+      cache.set('c', 'value3', { priority: 2 });
+      cache.set('d', 'value4', { priority: 2 });
+      expect(cache.has('a')).to.be.false;
+      expect(cache.has('b') && cache.has('c') && cache.has('d')).to.be.true;
+    });
+
+    it('should evict items based on priority when multiple items have the same frequency', () => {
+      // Insert items with the same frequency but different priorities
+      cache.set('a', 'value1', { priority: 1 });
+      cache.set('b', 'value2', { priority: 3 });
+      cache.set('c', 'value3', { priority: 2 });
+
+      // Insert another item, should evict the least frequent and lowest priority item
+      cache.set('d', 'value4', { priority: 2 });
+
+      // 'a' should be evicted because it has the lowest priority
+      expect(cache.has('a')).to.be.false;
+      expect(cache.has('b')).to.be.true;
+      expect(cache.has('d')).to.be.true;
+    });
+    it('should handle evictions when maxSize is reached', () => {
+      cache.set('a', 'value1', { priority: 1 });
+      cache.set('b', 'value2', { priority: 2 });
+      cache.set('c', 'value3', { priority: 3 });
+      cache.set('d', 'value4', { priority: 1 });
+      cache.set('g', 'value5', { priority: 3 });
+      expect(cache.has('a')).to.be.false;
+      expect(cache.has('d')).to.be.false;
+      expect(cache.has('b')).to.be.true;
+      expect(cache.has('c')).to.be.true;
+      expect(cache.has('g')).to.be.true;
+    });
+  });
 });

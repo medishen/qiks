@@ -19,7 +19,20 @@ export class MRU<K> implements EvictionPolicy<K> {
 
   evict(): K | null {
     const keys = Array.from(this.storage.keys());
-    const mostRecentKey = keys[keys.length - 1];
+    if (keys.length === 0) return null;
+
+    let mostRecentKey = keys[keys.length - 1];
+    let highestPriority = this.storage.get(mostRecentKey)?.priority ?? 0;
+    for (let i = keys.length - 2; i >= 0; i--) {
+      const key = keys[i];
+      const entry = this.storage.get(key);
+      const entryPriority = entry?.priority ?? 0;
+      if (i > keys.indexOf(mostRecentKey)) {
+        mostRecentKey = key;
+        highestPriority = entryPriority;
+      }
+    }
+
     if (mostRecentKey !== undefined) {
       const entry = this.storage.get(mostRecentKey);
       if (entry && entry.onExpire) {
@@ -29,6 +42,7 @@ export class MRU<K> implements EvictionPolicy<K> {
       this.storage.delete(mostRecentKey);
       return mostRecentKey;
     }
+
     return null;
   }
 }

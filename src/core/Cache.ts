@@ -45,6 +45,7 @@ export class Cache<K, V> {
     const cacheItem: CacheItem<string> = {
       value: serializedValue,
       expiry,
+      priority: options?.priority ?? 0,
       onExpire: options?.onExpire as ((key: any, value: string | null) => void) | undefined,
       swr: options?.swr
         ? {
@@ -225,5 +226,8 @@ export class Cache<K, V> {
   }
   unobserveKey(key: K, callback: EventCallback<K, V>): void {
     this.observerManager.unobserveKey(key, callback);
+  }
+  keys() {
+    return this.storage.keys();
   }
 }
