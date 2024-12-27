@@ -1,7 +1,7 @@
 {
   "name": "@medishen/qiks",
   "version": "1.0.0",
-  "description": "small cache system",
+  "description": "A high-performance, feature-rich caching library in TypeScript designed for versatility and real-world applications.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "directories": {
@@ -18,8 +18,8 @@
     "test:performance": "mocha --require ts-node/register tests/performance/**/*.spec.ts",
     "benchmark": "ts-node ./benchmark/performance.ts",
     "build": "rm -r dist/* & tsc",
-    "chmod": "chmod +x ./scripts/release.sh",
-    "release": "npm run chmod && ./scripts/release.sh"
+    "chmod": "chmod +x ./scripts/release",
+    "release": "npm run chmod && ./scripts/release"
   },
   "repository": {
     "type": "git",
