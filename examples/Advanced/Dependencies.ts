@@ -1,4 +1,4 @@
-import { Qiks } from '../../src/index';
+import { Qiks } from '../../dist/index';
 // Create a cache instance
 const cache = new Qiks<string, any>({ maxSize: 5 });
 

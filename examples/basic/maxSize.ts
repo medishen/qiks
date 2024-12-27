@@ -1,4 +1,4 @@
-import { Qiks } from '../../src';
+import { Qiks } from '../../dist';
 const cache = new Qiks<string, any>({ maxSize: 1 });
 // Set some values in the cache
 cache.set('user1', { name: 'Alice', age: 30 });

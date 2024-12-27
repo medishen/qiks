@@ -2,8 +2,10 @@
   "name": "@medishen/qiks",
   "version": "1.0.0",
   "description": "small cache system",
-  "main": "src/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "directories": {
+    "lib": "src",
     "doc": "docs",
     "example": "examples",
     "test": "tests"
@@ -13,7 +15,11 @@
     "test:unit": "mocha --require ts-node/register tests/unit/**/*.spec.ts",
     "test:integration": "mocha --require ts-node/register tests/integration/**/*.spec.ts",
     "test:e2e": "mocha --require ts-node/register tests/e2e/*.spec.ts",
-    "test:performance": "mocha --require ts-node/register tests/performance/**/*.spec.ts"
+    "test:performance": "mocha --require ts-node/register tests/performance/**/*.spec.ts",
+    "benchmark": "ts-node ./benchmark/performance.ts",
+    "build": "rm -r dist/* & tsc",
+    "chmod": "chmod +x ./scripts/release.sh",
+    "release": "npm run chmod && ./scripts/release.sh"
   },
   "repository": {
     "type": "git",
