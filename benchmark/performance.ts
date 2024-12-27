@@ -1,7 +1,6 @@
-import { Cache } from '../src/core/Cache';
-import { createStorageAdapter } from '../src/utils/index';
+import { Cache } from '../dist/core/Cache';
+import { createStorageAdapter } from '../dist/utils/index';
 import { performance } from 'perf_hooks';
-
 // Custom Storage Adapter (Map)
 const storage = new Map<string, any>();
 const storageAdapter = createStorageAdapter<string, any>(storage);

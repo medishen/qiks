@@ -1,4 +1,4 @@
-import { Qiks } from '../../src/index';
+import { Qiks } from '../../dist/index';
 
 const qiks = new Qiks<string, any>();
 qiks.set('user1', { name: 'John' });
