@@ -23,9 +23,14 @@ export class LFU<K> implements EvictionPolicy<K> {
   evict(): K | null {
     let leastFrequentKey: K | null = null;
     let leastFrequency = Infinity;
+    let lowestPriority = Infinity;
     for (const [key, entry] of this.storage.entries()) {
-      if (entry.frequency && entry.frequency < leastFrequency) {
-        leastFrequency = entry.frequency;
+      const frequency = entry.frequency ?? 0;
+      const priority = entry.priority ?? 0;
+
+      if (frequency < leastFrequency || (frequency === leastFrequency && priority < lowestPriority)) {
+        leastFrequency = frequency;
+        lowestPriority = priority;
         leastFrequentKey = key;
       }
     }

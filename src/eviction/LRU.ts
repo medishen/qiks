@@ -23,16 +23,32 @@ export class LRU<K> implements EvictionPolicy<K> {
 
   evict(): K | null {
     const keys = this.storage.keys();
-    const oldestKey = keys.next().value;
-    if (oldestKey !== undefined) {
-      const entry = this.storage.get(oldestKey);
+    let lowestPriorityKey: K | null = null;
+    let lowestPriority: number = Infinity;
+
+    for (const key of keys) {
+      const entry = this.storage.get(key);
+      if (entry) {
+        const priority = entry.priority ?? 0;
+        if (priority < lowestPriority) {
+          lowestPriority = priority;
+          lowestPriorityKey = key;
+        }
+      }
+    }
+
+    if (lowestPriorityKey !== null) {
+      const entry = this.storage.get(lowestPriorityKey);
       if (entry && entry.onExpire) {
         const deserializedValue = Serializer.deserialize(entry.value);
-        entry.onExpire(oldestKey, deserializedValue);
+        entry.onExpire(lowestPriorityKey, deserializedValue);
       }
-      this.storage.delete(oldestKey);
-      return oldestKey;
+
+      this.storage.delete(lowestPriorityKey);
+
+      return lowestPriorityKey;
     }
+
     return null;
   }
 }

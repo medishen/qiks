@@ -77,118 +77,28 @@
 
 11. **Stale-While-Revalidate**
 
-    - [ ] Serve stale data while fetching fresh data in the background.
-    - [ ] Test revalidation logic under concurrent requests.
+    - [x] Serve stale data while fetching fresh data in the background.
+    - [x] Test revalidation logic under concurrent requests.
 
 12. **Priority-Based Caching**
 
-    - [ ] Add priority levels to cached items.
-    - [ ] Test priority handling under eviction scenarios.
-
-13. **Data Sharding**
-
-    - [ ] Implement cache sharding for distributed systems.
-    - [ ] Test sharding logic with multiple shards.
-
-14. **Rate-Limiting with Dynamic Thresholds**
-
-    - [ ] Use the cache to enforce dynamic rate limits (e.g., per user, IP).
-    - [ ] Write tests to validate rate-limiting logic.
-
-15. **Cross-Platform Synchronization**
-    - [ ] Synchronize cache across multiple instances using Pub/Sub or WebSockets.
-    - [ ] Test synchronization in distributed setups.
-
-### **Optimizations and Benchmarking**
-
-1. **Performance Benchmarking**
-
-   - [ ] Create scripts to benchmark cache performance (CRUD, eviction, etc.).
-   - [ ] Compare performance with existing libraries (e.g., `lru-cache`).
-
-2. **Memory Optimization**
-
-   - [ ] Analyze memory usage under heavy load.
-   - [ ] Optimize storage structure to minimize overhead.
-
-3. **Concurrency and Thread-Safety**
-   - [ ] Add support for concurrent operations with locks or atomic structures.
-   - [ ] Test thread-safety under stress conditions.
+    - [x] Add priority levels to cached items.
+    - [x] Test priority handling under eviction scenarios.
 
 ### **Documentation**
 
 1. **User Guide**
 
-   - [ ] Write detailed documentation for all features.
-   - [ ] Include setup instructions and usage examples.
+   - [x] Write detailed documentation for all features.
 
-2. **API Reference**
+2. **Examples**
 
-   - [ ] Generate a comprehensive API reference with examples.
+   - [x] Add real-world use cases in the `examples/` directory.
 
-3. **Examples**
-
-   - [ ] Add real-world use cases in the `examples/` directory.
-
-4. **FAQ and Troubleshooting**
-   - [ ] Create a FAQ section addressing common issues.
-
-### **Community Contributions**
-
-1. **Code of Conduct**
-
-   - [ ] Write a `CODE_OF_CONDUCT.md` file.
-
-2. **Contributing Guidelines**
-
-   - [ ] Add `CONTRIBUTING.md` with steps for submitting issues and PRs.
-   - [ ] Encourage the use of conventional commits.
-
-3. **Issue Templates**
-
-   - [ ] Add GitHub issue templates for bugs and feature requests.
-
-4. **Security Guidelines**
-   - [ ] Create `SECURITY.md` to report vulnerabilities.
-
-### **Release Plan**
-
-1. **Alpha Release**
-
-   - [ ] Implement basic features and release a beta version.
-
-2. **Beta Release**
-
-   - [ ] Add intermediate features and gather community feedback.
-
-3. **Production Release**
-   - [ ] Finalize all features and optimizations.
-   - [ ] Write release notes and publish to npm.
-
-### **Future Enhancements**
-
-1. **Integration with Popular Frameworks**
-
-   - [ ] Provide plugins for Express, NestJS, and other frameworks.
-
-2. **Plugin Architecture**
-
-   - [ ] Allow developers to extend the library with custom plugins.
-
-3. **Dashboard for Cache Monitoring**
-   - [ ] Build a web-based dashboard to monitor cache usage and performance.
-
----
+3. **FAQ and Troubleshooting**
+   - [x] Create a FAQ section addressing common issues.
 
 **Contact Information**
 
 - **Email:** bitsgenix@gmail.com
 - **GitHub:** [https://github.com/medishen/qiks.git](https://github.com/medishen/qiks.git)
-
----
-
-### Notes
-
-- Ensure all code is well-tested and documented.
-- Follow semantic versioning for releases.
-- Focus on performance and developer experience.
