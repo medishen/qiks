@@ -1,5 +1,5 @@
 import { CacheError } from '../../errors/CacheError';
-import { CacheItemOptions, NamespaceCacheConfig } from '../../types/CacheTypes';
+import { CacheItemOptions, GetOptions, NamespaceCacheConfig } from '../../types/CacheTypes';
 import { Cache } from '../Cache';
 
 export class NamespaceManager {
@@ -35,9 +35,9 @@ export class NamespaceCache<K, V> extends Cache<string, V> {
     super.set(compoundKey, value, options);
   }
 
-  get(key: string): V | null {
+  get(key: string, options?: GetOptions<string>): V | [string, V][] | V[] | string[] | null | Promise<V | null> {
     const compoundKey = this.getCompoundKey(key);
-    return super.get(compoundKey);
+    return super.get(compoundKey, options);
   }
 
   delete(key: string): void {

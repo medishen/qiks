@@ -72,35 +72,30 @@
 
 10. **Pattern-Based Preloading**
 
-    - [ ] Implement key preloading with pattern matching (e.g., `"user:*"`).
-    - [ ] Write tests to ensure preloading works as expected.
+    - [x] Implement key preloading with pattern matching (e.g., `"user:*"`).
+    - [x] Write tests to ensure preloading works as expected.
 
-11. **Hierarchical Caching (Multi-Tier Cache)**
-
-    - [ ] Add support for multi-level caches (e.g., in-memory + Redis/disk).
-    - [ ] Write integration tests for multi-tier caching.
-
-12. **Stale-While-Revalidate**
+11. **Stale-While-Revalidate**
 
     - [ ] Serve stale data while fetching fresh data in the background.
     - [ ] Test revalidation logic under concurrent requests.
 
-13. **Priority-Based Caching**
+12. **Priority-Based Caching**
 
     - [ ] Add priority levels to cached items.
     - [ ] Test priority handling under eviction scenarios.
 
-14. **Data Sharding**
+13. **Data Sharding**
 
     - [ ] Implement cache sharding for distributed systems.
     - [ ] Test sharding logic with multiple shards.
 
-15. **Rate-Limiting with Dynamic Thresholds**
+14. **Rate-Limiting with Dynamic Thresholds**
 
     - [ ] Use the cache to enforce dynamic rate limits (e.g., per user, IP).
     - [ ] Write tests to validate rate-limiting logic.
 
-16. **Cross-Platform Synchronization**
+15. **Cross-Platform Synchronization**
     - [ ] Synchronize cache across multiple instances using Pub/Sub or WebSockets.
     - [ ] Test synchronization in distributed setups.
 
