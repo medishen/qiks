@@ -1,9 +1,9 @@
 import { expect } from 'chai';
-import { CacheItem, StorageAdapter } from '../../../../src/types/CacheTypes';
-import { ObserverManager } from '../../../../src/core/managers/ObserverManager';
+import { CacheItem, StorageAdapter } from '../../../src/types/CacheTypes';
+import { ObserverManager } from '../../../src/core/managers/ObserverManager';
 import { beforeEach, describe, it } from 'mocha';
-import { createStorageAdapter } from '../../../../src/utils';
-import { CacheError } from '../../../../src/errors/CacheError';
+import { createStorageAdapter } from '../../../src/utils';
+import { CacheError } from '../../../src/errors/CacheError';
 
 describe('ObserverManager', () => {
   let storage: StorageAdapter<string, any>;
@@ -91,23 +91,18 @@ describe('ObserverManager', () => {
 
     it('should not trigger observers if the key does not exist', () => {
       const key = 'user:1';
-      const callback: (key: string, value?: string) => void = (key, value) => {};
-
       storage.set(key, { value: 'John', observers: [] });
 
       observerManager.triggerObservers('nonexistentKey', 'John');
-      // Ensure no errors and no triggers occur
     });
 
     it('should not trigger any observers if no observers are registered', () => {
       const key = 'user:1';
-      const callback: (key: string, value?: string) => void = (key, value) => {};
-
       storage.set(key, { value: 'John', observers: [] });
 
       let triggered = false;
       observerManager.triggerObservers(key, 'John');
-      // No observers should be triggered
+
       expect(triggered).to.be.false;
     });
   });

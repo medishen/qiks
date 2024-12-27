@@ -1,11 +1,12 @@
 import { CacheError } from '../errors/CacheError';
 import { EventManager } from '../events/EventManager';
-import { CacheEventType, CacheItemOptions, CacheConfig, StorageAdapter, CacheItem, EventCallback } from '../types/CacheTypes';
+import { CacheEventType, CacheItemOptions, CacheConfig, StorageAdapter, CacheItem, EventCallback, GetOptions, SWRPolicy } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
 import { TTLManager } from './managers/TTLManager';
 import { expireKeyRecursively, initializeEvictionPolicy, isInternalKey, isWeak, validateKey, validateOptions } from '../utils';
 import { ObserverManager } from './managers/ObserverManager';
 import { DependencyManager } from './managers/DependencyManager';
+import { PatternMatcher } from '../utils/PatternMatcher';
 export class Cache<K, V> {
   private evictionPolicy: EvictionPolicy<K>;
   protected ttlManager: TTLManager;
@@ -30,7 +31,6 @@ export class Cache<K, V> {
     if (this.getUserKeyCount() >= (this.options.maxSize ?? Infinity)) {
       this.evictionPolicy.evict();
     }
-
     const serializedValue = this.options.serializer!.serialize<V>(value);
     const expiry = options?.ttl ? this.ttlManager.setTTL(options.ttl) : null;
     this.observerManager.triggerObservers(key, value);
@@ -46,16 +46,53 @@ export class Cache<K, V> {
       value: serializedValue,
       expiry,
       onExpire: options?.onExpire as ((key: any, value: string | null) => void) | undefined,
+      swr: options?.swr
+        ? {
+            ...options.swr,
+            isRunning: false,
+            revalidate: async () => {
+              const rawValue = await options.swr!.revalidate();
+              this.set(key, rawValue);
+              return this.options.serializer!.serialize(rawValue);
+            },
+            lastFetched: Date.now(),
+          }
+        : undefined,
     };
     this.evictionPolicy.onInsert(key, cacheItem);
     this.event.emit('set', key, value);
   }
 
-  get(key: K): V | null {
-    if (!key) {
-      throw new CacheError('Key must not be empty');
+  get(key: K, options?: GetOptions<K>): V | [K, V][] | V[] | K[] | null | Promise<V | null> {
+    validateKey(key);
+    const {
+      keys = false,
+      values = true,
+      pattern = false,
+      withTuples = false,
+      exclude = null,
+      sort = 'ASC',
+      minLen = 0,
+      maxLen = Infinity,
+      prefix = null,
+      suffix = null,
+      filter = null,
+      transform = null,
+      limit = Infinity,
+    } = options || {};
+    if (typeof key === 'string' && pattern) {
+      const results = PatternMatcher.findMatches(key, this.storage, options!);
+      if (withTuples || (keys && values)) {
+        return results as [K, V][];
+      }
+      if (keys) {
+        return results as K[];
+      }
+      if (values) {
+        return results as V[];
+      }
+      return null;
     }
-
     const entry = this.options.storage.get(key);
     if (!entry) return null;
     if (this.ttlManager.isExpired(entry)) {
@@ -63,8 +100,6 @@ export class Cache<K, V> {
         const deserializedValue = this.options.serializer!.deserialize<string>(entry.value);
         entry.onExpire(key, deserializedValue);
       }
-      // Handle dependent keys
-      // Expire all dependents recursively
       const dependents = this.dependencyManager.getDependents(key);
       if (dependents) {
         for (const dependentKey of dependents) {
@@ -76,10 +111,50 @@ export class Cache<K, V> {
       this.event.emit('expire', key);
       return null;
     }
+    if (entry.swr) {
+      const swrPolicy: SWRPolicy<string> | undefined = entry.swr;
+      if (this.isStale(swrPolicy)) {
+        const freshEntry = this.storage.get(key);
+        if (freshEntry) {
+          if (swrPolicy.isRunning) {
+            return this.options.serializer.deserialize<V>(freshEntry.value);
+          }
+          swrPolicy.isRunning = true;
+          return new Promise(async (resolve, reject) => {
+            try {
+              const freshData = await swrPolicy.revalidate();
+              const deserializedValue = this.options.serializer.deserialize<V>(freshData);
+              freshEntry.value = this.options.serializer.serialize(deserializedValue);
+              swrPolicy.lastFetched = Date.now();
+              this.storage.set(key, freshEntry);
+              resolve(freshData as V);
+            } catch (error) {
+              reject(new CacheError(`Failed to revalidate key "${key}": ${error}`));
+            } finally {
+              swrPolicy.isRunning = false;
+            }
+          });
+        }
+      }
+      return this.options.serializer.deserialize<V>(entry.value);
+    }
     const deserializedValue = this.options.serializer!.deserialize<V>(entry.value);
     this.evictionPolicy.onAccess(key);
     this.event.emit('get', key, deserializedValue);
-    return deserializedValue;
+    if (keys) {
+      return [key as K];
+    }
+    if (values) {
+      return deserializedValue;
+    }
+    if (withTuples || (keys && values)) {
+      return [[key as K, deserializedValue]] as [K, V][];
+    }
+    return null;
+  }
+  private isStale(swrPolicy: SWRPolicy<any>): boolean {
+    const now = Date.now();
+    return now - (swrPolicy.lastFetched || 0) >= swrPolicy.staleThreshold;
   }
   delete(key: K): void {
     validateKey(key);

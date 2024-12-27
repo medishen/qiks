@@ -1,8 +1,8 @@
 import { beforeEach, describe, it } from 'mocha';
 import { expect } from 'chai';
-import { DependencyManager } from '../../../../src/core/managers/DependencyManager';
-import { CacheItem, StorageAdapter } from '../../../../src/types/CacheTypes';
-import { createStorageAdapter } from '../../../../src/utils';
+import { DependencyManager } from '../../../src/core/managers/DependencyManager';
+import { CacheItem, StorageAdapter } from '../../../src/types/CacheTypes';
+import { createStorageAdapter } from '../../../src/utils';
 
 describe('DependencyManager', () => {
   let storage: StorageAdapter<string, CacheItem<string>>;

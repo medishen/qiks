@@ -12,6 +12,7 @@ describe('Cache Class - Advanced Tests', () => {
   beforeEach(() => {
     const rawStorage = new WeakMap<object, CacheItem<string>>();
     const storage = createStorageAdapter<object, CacheItem<string>>(rawStorage);
+    storage.clear!();
     cache = new Cache({
       serializer: Serializer,
       storage,
@@ -334,6 +335,188 @@ describe('Cache Class - Advanced Tests', () => {
 
         expect(() => cache.unobserveKey(key, callback)).to.throw(CacheError, `No observers found for key "${key}".`);
       });
+    });
+  });
+  describe('Cache - Pattern Matcher', () => {
+    let storage: StorageAdapter<string, CacheItem<string>>;
+    let cache: Cache<string, string>;
+    const mapStorage = new Map<string, CacheItem<string>>();
+
+    beforeEach(() => {
+      storage = createStorageAdapter<string, CacheItem<string>>(mapStorage);
+      storage.clear!();
+      cache = new Cache<string, string>({
+        storage,
+        serializer: { serialize: JSON.stringify, deserialize: JSON.parse },
+        policy: 'LRU',
+      });
+      mapStorage.clear();
+    });
+
+    it('should return matching keys for a given pattern', () => {
+      cache.set('user:1', 'John Doe');
+      cache.set('user:2', 'Jane Doe');
+      cache.set('admin:1', 'Admin User');
+
+      const results = cache.get('user:*', { pattern: true, keys: true });
+      expect(results).to.have.members(['user:1', 'user:2']);
+    });
+
+    it('should return matching values for a given pattern', () => {
+      cache.set('user:1', 'John Doe');
+      cache.set('user:2', 'Jane Doe');
+      cache.set('admin:1', 'Admin User');
+
+      const results = cache.get('user:*', { pattern: true, values: true });
+      expect(results).to.have.members(['John Doe', 'Jane Doe']);
+    });
+
+    it('should return matching key-value tuples for a given pattern', () => {
+      cache.set('user:1', 'John Doe');
+      cache.set('user:2', 'Jane Doe');
+      cache.set('admin:1', 'Admin User');
+
+      const results = cache.get('user:*', { pattern: true, withTuples: true });
+      expect(results).to.deep.equal([
+        ['user:1', 'John Doe'],
+        ['user:2', 'Jane Doe'],
+      ]);
+    });
+
+    it('should handle an empty pattern and return no matches', () => {
+      const results = cache.get('nonexistent:*', { pattern: true, keys: true });
+      expect(results).to.have.lengthOf(0);
+    });
+
+    it('should handle edge case of matching a key with an empty value', () => {
+      cache.set('emptyKey', '');
+      const results = cache.get('emptyKey', { keys: true });
+      expect(results).to.deep.equal(['emptyKey']);
+    });
+  });
+  describe('Cache - Swr Option', () => {
+    let storage: StorageAdapter<string, any>;
+    let cache: Cache<string, string>;
+    const mapStorage = new Map<string, any>();
+
+    beforeEach(() => {
+      storage = createStorageAdapter<string, any>(mapStorage);
+      storage.clear!();
+      cache = new Cache<string, string>({
+        storage,
+        serializer: { serialize: JSON.stringify, deserialize: JSON.parse },
+        policy: 'LRU',
+      });
+      mapStorage.clear();
+    });
+
+    it('should return fresh data after revalidation when data is stale', async function () {
+      this.timeout(5000);
+
+      const key = 'user:1';
+      const staleData = 'Old Data';
+      const freshData = 'Fresh Data';
+
+      cache.set(key, staleData, {
+        swr: {
+          revalidate: async () => {
+            console.log('Revalidating...');
+            return freshData;
+          },
+          staleThreshold: 1000,
+        },
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      const result = await cache.get(key);
+      const clearValue = JSON.stringify(freshData);
+
+      expect(result).to.equal(clearValue);
+    });
+
+    it('should return old data when SWR is already running', async function () {
+      this.timeout(5000);
+      const key = 'user:2';
+      const oldData = 'Old Data';
+      const newData = 'New Data';
+      cache.set(key, oldData, {
+        swr: {
+          revalidate: async () => {
+            return newData;
+          },
+          staleThreshold: 1000,
+        },
+      });
+      const result1 = await cache.get(key);
+      expect(result1).to.equal(oldData);
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const result2 = await cache.get(key);
+      expect(result2).to.equal(JSON.stringify(newData));
+    });
+
+    it('should return data immediately if not stale and no revalidation needed', async () => {
+      const key = 'user:4';
+      const data = 'Immediate Data';
+
+      cache.set(key, data, {
+        swr: {
+          revalidate: async () => {
+            return data;
+          },
+          staleThreshold: 1,
+        },
+      });
+
+      const result = await cache.get(key);
+      expect(result).to.equal(data);
+    });
+
+    it('should handle edge case when no swr option is provided', async () => {
+      const key = 'user:5';
+      const data = 'Edge Case Data';
+
+      cache.set(key, data);
+
+      const result = cache.get(key);
+      expect(result).to.equal(data);
+    });
+
+    it('should handle edge case when staleThreshold is set to 0', async () => {
+      const key = 'user:6';
+      const staleData = 'Stale Data';
+      const freshData = 'Fresh Data';
+
+      cache.set(key, staleData, {
+        swr: {
+          revalidate: async () => {
+            return freshData;
+          },
+          staleThreshold: 0,
+        },
+      });
+
+      const result = await cache.get(key);
+      expect(result).to.equal(JSON.stringify(freshData));
+    });
+
+    it('should trigger revalidation if lastFetched is too old', async function () {
+      this.timeout(5000);
+      const key = 'user:7';
+      const staleData = 'Stale Data';
+      const freshData = 'Fresh Data';
+
+      cache.set(key, staleData, {
+        swr: {
+          revalidate: async () => {
+            return freshData;
+          },
+          staleThreshold: 1000,
+        },
+      });
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const result = await cache.get(key);
+      expect(result).to.equal(JSON.stringify(freshData));
     });
   });
 });

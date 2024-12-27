@@ -4,12 +4,21 @@ export interface CacheItem<V> {
   frequency?: number;
   dependents?: Set<string>;
   onExpire?: (key: any, value: V) => void;
+  swr?: SWRPolicy<V>;
 }
-
 export interface CacheItemOptions<K, V> {
   ttl?: number;
   dependsOn?: K;
   onExpire?: (key: K, value: V) => void;
+  swr?: SWROptions<V>;
+}
+export interface SWROptions<V> {
+  revalidate: () => Promise<V>;
+  staleThreshold: number;
+}
+export interface SWRPolicy<V> extends SWROptions<V> {
+  isRunning: boolean;
+  lastFetched?: number;
 }
 export interface CacheSerializer {
   serialize<V>(data: V): string;
@@ -44,4 +53,19 @@ export interface CacheConfigQiks<K> extends BaseCacheConfig {
 export interface NamespaceCacheConfig<K, V> extends BaseCacheConfig {
   parentStorage: StorageAdapter<string, CacheItem<string>>;
   namespace: string;
+}
+export interface GetOptions<K> {
+  keys?: boolean;
+  values?: boolean;
+  pattern?: boolean;
+  limit?: number;
+  withTuples?: boolean;
+  exclude?: string | string[];
+  sort?: 'ASC' | 'DESC';
+  minLen?: number;
+  maxLen?: number;
+  suffix?: string;
+  prefix?: string;
+  filter?: (key: K, value: any) => boolean;
+  transform?: (key: K, value: any) => any;
 }
