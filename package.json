@@ -1,6 +1,6 @@
 {
   "name": "@medishn/qiks",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A high-performance, feature-rich caching library in TypeScript designed for versatility and real-world applications.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -39,7 +39,7 @@
     "url": "https://github.com/medishen/qiks/issues"
   },
   "homepage": "https://github.com/medishen/qiks#readme",
-  "dependencies": {
+  "devDependencies": {
     "@types/chai": "^5.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.10.2",
