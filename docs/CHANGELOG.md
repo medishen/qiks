@@ -65,3 +65,9 @@
 
 - **API Documentation**: Updated the README with basic usage examples, API documentation, and an overview of the cache's core features.
 - **TODO.md**: Updated with completed tasks and a list of potential future enhancements.
+
+## [1.0.1] - 2024-12-28
+
+### Fixed
+
+- Corrected `package.json` to classify dependencies under `devDependencies` where appropriate.
