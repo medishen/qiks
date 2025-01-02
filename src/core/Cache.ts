@@ -157,11 +157,11 @@ export class Cache<K, V> {
     const now = Date.now();
     return now - (swrPolicy.lastFetched || 0) >= swrPolicy.staleThreshold;
   }
-  delete(key: K): void {
+  delete(key: K): boolean {
     validateKey(key);
 
     const entry = this.options.storage.get(key);
-    if (!entry) return;
+    if (!entry) return false;
     if (entry.onExpire) {
       const deserializedValue = this.options.serializer!.deserialize<string>(entry.value);
       entry.onExpire(key, deserializedValue);
@@ -177,6 +177,7 @@ export class Cache<K, V> {
     this.dependencyManager.clearDependencies(key);
     this.evictionPolicy.onRemove(key);
     this.event.emit('delete', key, value);
+    return true;
   }
 
   clear(): void {
