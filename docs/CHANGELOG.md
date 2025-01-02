@@ -99,3 +99,21 @@
 
 - **Build Process Refinement**:  
   Simplified the build script by removing unnecessary cleanup commands, optimizing the build process for better efficiency.
+
+## [1.0.3] - 2025-01-02
+
+### Enhancements
+
+- **Cache Event System Improvements**:
+
+  - Added support for custom cache event types by updating the `CacheEventType` type definition to include string literals. This allows users to define and listen to their own custom events.
+  - Introduced an `emit` method in the `Cache` class, enabling direct emission of cache events with associated key-value pairs.
+
+- **Serializer Enhancements**:
+
+  - Expanded serialization capabilities with support for additional complex data types, including `Date`, `RegExp`, `Function`, `Map`, `Set`, `Buffer`, `Error`, `Promise`, and `ArrayBuffer`.
+  - Implemented handlers for these types with proper `serialize` and `deserialize` methods, allowing for seamless storage and retrieval of diverse data structures.
+  - Enhanced the `serialize` and `deserialize` methods to automatically recognize and process objects based on their constructors, improving type safety and flexibility.
+
+- **Documentation Updates**:
+  - Clarified cache event descriptions in the README, specifying the possibility of custom event types.
