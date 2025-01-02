@@ -40,7 +40,7 @@ Caching plays a key role in modern web applications, improving performance, redu
 - **TTL (Time-To-Live)**: Automatically expires items based on the configured TTL.
 - **Custom Serialization**: Built-in JSON support with the option to provide custom serializers.
 - **Namespaces**: Create isolated cache domains for different parts of your application.
-- **Cache Events**: Listen to cache events (set, get, delete, expire, evict).
+- **Cache Events**: Listen to cache events (set, get, delete, expire, or custom event).
 - **Eviction Policies**: Supports LRU (Least Recently Used), LFU (Least Frequently Used), MRU (Most Recently Used)
 - **Cache Dependency Management**: Automatically handle key dependencies when other keys are modified or evicted.
 - **Expiration Callbacks**: Execute custom logic when items expire.

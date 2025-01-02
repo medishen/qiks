@@ -26,7 +26,7 @@ export interface CacheSerializer {
   serialize<V>(data: V): string;
   deserialize<V>(data: string): V;
 }
-export type CacheEventType = 'set' | 'get' | 'delete' | 'expire' | 'evict';
+export type CacheEventType = 'set' | 'get' | 'delete' | 'expire' | string;
 export type EventCallback<K, V> = (key: K, value?: V) => void;
 export type EvictionPolicyType = 'LRU' | 'MRU' | 'LFU';
 export interface StorageAdapter<K, V> {
