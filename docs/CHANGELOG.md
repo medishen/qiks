@@ -117,3 +117,9 @@
 
 - **Documentation Updates**:
   - Clarified cache event descriptions in the README, specifying the possibility of custom event types.
+
+## [1.0.4] - 2025-01-02
+
+### Fixes
+
+- fix type internal property references in Serializer class

@@ -12,3 +12,4 @@ tsconfig.test.js
 *.tgz
 .git/
 .gitignore
+.env

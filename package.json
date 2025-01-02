@@ -1,6 +1,6 @@
 {
   "name": "@medishn/qiks",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A high-performance, feature-rich caching library in TypeScript designed for versatility and real-world applications.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
