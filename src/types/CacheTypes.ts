@@ -55,7 +55,7 @@ export interface CacheConfigQiks<K> extends BaseCacheConfig {
 }
 export interface NamespaceCacheConfig<K, V> extends BaseCacheConfig {
   serializer: CacheSerializer;
-  parentStorage: StorageAdapter<string, CacheItem<string>>;
+  parentStorage: StorageAdapter<K, CacheItem<string>>;
   namespace: string;
 }
 export interface GetOptions<K> {

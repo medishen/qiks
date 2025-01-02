@@ -3,17 +3,17 @@ import { CacheItemOptions, GetOptions, NamespaceCacheConfig } from '../../types/
 import { Cache } from '../Cache';
 
 export class NamespaceManager {
-  static createCompoundKey(namespace: string, key: string): string {
+  static createCompoundKey<K>(namespace: string, key: K): K {
     if (!namespace) {
       throw new CacheError('Namespace name must not be empty');
     }
     if (!key) {
       throw new CacheError('Key must not be empty');
     }
-    return `${namespace}:${key}`;
+    return `${namespace}:${key}` as K;
   }
 }
-export class NamespaceCache<K, V> extends Cache<string, V> {
+export class NamespaceCache<K, V> extends Cache<K, V> {
   constructor(private config: NamespaceCacheConfig<K, V>) {
     const { parentStorage, namespace, serializer, policy } = config;
     if (!namespace) {
@@ -26,34 +26,36 @@ export class NamespaceCache<K, V> extends Cache<string, V> {
     });
   }
 
-  private getCompoundKey(key: string): string {
+  private getCompoundKey(key: K): K {
     return NamespaceManager.createCompoundKey(this.config.namespace, key);
   }
 
-  set(key: string, value: V, options?: CacheItemOptions<string, V>): void {
+  set(key: K, value: V, options?: CacheItemOptions<K, V>): void {
     const compoundKey = this.getCompoundKey(key);
     super.set(compoundKey, value, options);
   }
 
-  get(key: string, options?: GetOptions<string>): V | [string, V][] | V[] | string[] | null | Promise<V | null> {
+  get(key: K, options?: GetOptions<K>): V | [K, V][] | V[] | K[] | null | Promise<V | null> {
     const compoundKey = this.getCompoundKey(key);
     return super.get(compoundKey, options);
   }
 
-  delete(key: string): void {
+  delete(key: K): boolean {
     const compoundKey = this.getCompoundKey(key);
-    super.delete(compoundKey);
+    return super.delete(compoundKey);
   }
 
   clear(): void {
     for (const compoundKey of this.config.parentStorage.keys()) {
-      if (compoundKey.startsWith(`${this.config.namespace}:`)) {
-        super.delete(compoundKey);
+      if (typeof compoundKey === 'string') {
+        if (compoundKey.startsWith(`${this.config.namespace}:`)) {
+          super.delete(compoundKey);
+        }
       }
     }
   }
 
-  has(key: string): boolean {
+  has(key: K): boolean {
     const compoundKey = this.getCompoundKey(key);
     return super.has(compoundKey);
   }

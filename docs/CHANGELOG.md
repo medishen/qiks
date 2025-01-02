@@ -71,3 +71,31 @@
 ### Fixed
 
 - Corrected `package.json` to classify dependencies under `devDependencies` where appropriate.
+
+## [1.0.2] - 2025-01-02
+
+### Enhancements
+
+- **Cache `delete` Method Update**:  
+  The `delete` method in the `Cache` class now returns a boolean indicating whether the deletion was successful, instead of simply performing the action without feedback.
+- **Namespace Key Handling Improvements**:  
+  The `NamespaceManager.createCompoundKey` method was updated to accept generic key types, improving type flexibility for different key structures in namespaces. This change extends to other methods handling keys in `NamespaceCache`.
+
+- **Generalization of Key Types**:  
+  The `Qiks` and `NamespaceCache` classes now support generic key types (`K`) rather than being restricted to strings, enabling better flexibility and type safety in caching operations.
+
+- **Refined Cache Item Management**:  
+  `NamespaceCache` methods such as `get`, `set`, `delete`, and `has` now accept generic key types (`K`), allowing for more specific key management in the namespace context.
+
+### Fixes
+
+- **Improved Key Validation in `NamespaceCache`**:  
+  Fixed an issue where non-string keys could lead to unexpected behavior in the namespace cache system. The cache now properly handles and validates keys of any type.
+
+- **Mocha Test Suite Adjustment**:  
+  The test suite was adjusted to run integration tests instead of e2e tests by default, aligning with the intended testing approach for this version.
+
+### Miscellaneous
+
+- **Build Process Refinement**:  
+  Simplified the build script by removing unnecessary cleanup commands, optimizing the build process for better efficiency.
