@@ -231,4 +231,7 @@ export class Cache<K, V> {
   keys() {
     return this.storage.keys();
   }
+  emit(event: CacheEventType, key: K, value?: V | undefined) {
+    this.event.emit(event, key, value);
+  }
 }
