@@ -127,12 +127,28 @@
 ## [1.0.5] - 2025-01-04
 
 ### Fixed
+
 - **Serialization Enhancements**: Improved the `Serializer` class to handle various complex data types more robustly:
   - **Objects**: Added support for serializing and deserializing nested objects while preserving their structure.
   - **ArrayBuffer**: Corrected deserialization to properly reconstruct `ArrayBuffer` from serialized data.
 
 ### Added
+
 - Introduced a marker (`__SERIALIZED__`) to prevent duplicate serialization of already processed data.
 
 ### Notes
+
 - These changes improve the reliability of the `Serializer` class, ensuring accurate handling of complex and nested data structures across serialization and deserialization operations.
+
+## [1.0.6] - 2025-01-04
+
+### Changes
+
+- **Improved Type Handling**:
+  - Added a new `SupportedSerializableTypes` type to manage and categorize all supported serializable types.
+  - Refactored the `serialize` method in the `Serializer` class to use a more generalized check for supported types, removing redundant type checks (e.g., `Date`, `ArrayBuffer`, `Buffer`).
+
+### Added
+
+- **`isSupportedSerializableType` method**:
+  - Introduced this method to streamline the checking of supported serializable types, enhancing code readability and maintainability.

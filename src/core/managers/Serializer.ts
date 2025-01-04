@@ -16,7 +16,7 @@ type Handlers = {
   ArrayBuffer: Handler<ArrayBuffer>;
   Object: Handler<Object>;
 };
-
+type SupportedSerializableTypes = Date | RegExp | Function | Map<any, any> | Set<any> | Buffer | Error | Promise<any> | ArrayBuffer | object;
 export class Serializer {
   static readonly type_internal = '__TYPE__';
   static handlers = {
@@ -120,16 +120,13 @@ export class Serializer {
   };
   static serialize<V>(data: V): string {
     try {
-      if (data instanceof Date) {
-        return JSON.stringify(Serializer.handlers.Date.serialize(data));
+      if (Serializer.isSupportedSerializableType(data)) {
+        const typeName = data?.constructor?.name as keyof Handlers;
+        if (typeName && Serializer.handlers[typeName]) {
+          const handler = Serializer.handlers[typeName];
+          return JSON.stringify(handler.serialize(data as any));
+        }
       }
-      if (data instanceof ArrayBuffer) {
-        return JSON.stringify(Serializer.handlers.ArrayBuffer.serialize(data));
-      }
-      if (data instanceof Buffer) {
-        return JSON.stringify(Serializer.handlers.Buffer.serialize(data));
-      }
-
       return JSON.stringify(data, (key, value) => {
         if (value && (typeof value === 'object' || typeof value === 'function') && value.constructor) {
           const typeName = value.constructor.name as keyof Handlers;
@@ -162,5 +159,19 @@ export class Serializer {
     } catch (error: any) {
       throw new CacheError(`Deserialization failed: ${error.message}`);
     }
+  }
+  static isSupportedSerializableType(data: any): data is SupportedSerializableTypes {
+    return (
+      data instanceof Date ||
+      data instanceof RegExp ||
+      data instanceof Function ||
+      data instanceof Map ||
+      data instanceof Set ||
+      data instanceof Buffer ||
+      data instanceof Error ||
+      data instanceof Promise ||
+      data instanceof ArrayBuffer ||
+      typeof data === 'object'
+    );
   }
 }
