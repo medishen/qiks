@@ -152,3 +152,38 @@
 
 - **`isSupportedSerializableType` method**:
   - Introduced this method to streamline the checking of supported serializable types, enhancing code readability and maintainability.
+
+## [1.1.0] - 2025-01-05
+
+### Removed:
+
+- Removed internal serialization and deserialization handling in Qiks, as outlined in version 1.1.0 specifications.
+- Removed the internal event callback structure in favor of a more flexible `CacheItem` storage approach for event handling.
+- Removed JSON serialization of cache item values in pattern matching tests.
+
+### Changes:
+
+- **EventManager Refactor**: Now interacts with `ObserverManager` for improved event listener and observer management.
+- **Storage Refactor**: Unified the usage of `CacheItem` across components (e.g., events, eviction policies) to ensure a consistent structure for cache data.
+  - Updated various components (e.g., event management, eviction policies) for improved type safety and flexibility in storing cache data.
+- **General Type Refinements**:
+  - Refined type usage across cache, events, and eviction policies, ensuring better consistency and flexibility for key-value types throughout the codebase.
+- **Eviction Policies Refactor**:
+  - `LRU`, `MRU`, and `LFU` eviction policies have been updated to use the `CacheItem` type for improved management and eviction of cache data.
+
+### Enhancements
+
+- **Improved Test Suite**:
+  - Updated test cases for `EventManager`, `Eviction Policies`, and `PatternMatcher` to reflect changes in the data structure and the new `CacheItem` type.
+- **Cache Event Management Refactor**:
+  - Event listeners now work directly with `CacheItem`, providing more precise management of events in cache operations.
+- **Test Coverage Fixes**:
+  - Fixed type mismatches and edge cases in test cases, ensuring proper test coverage for all implemented features and fixes.
+
+### Miscellaneous
+
+- **Updated Project Structure**:
+  - Refactored project to ensure more coherent and consistent naming across the codebase, especially related to event management, storage, and cache operations.
+- **Documentation**:
+  - Updated documentation to reflect changes in cache management, event handling, and eviction policies.
+  - Detailed the removal of serialization and deserialization features in the project documentation.
