@@ -9,7 +9,7 @@ export class TTLManager {
     return Date.now() + ttl;
   }
 
-  isExpired<V>(entry: CacheItem<V>): boolean {
+  isExpired<K, V>(entry: CacheItem<K, V>): boolean {
     return !!entry.expiry && entry.expiry <= Date.now();
   }
 }

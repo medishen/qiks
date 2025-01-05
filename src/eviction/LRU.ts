@@ -1,9 +1,8 @@
-import { Serializer } from '../core/managers/Serializer';
 import { CacheItem, StorageAdapter } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
 
-export class LRU<K> implements EvictionPolicy<K> {
-  constructor(private storage: StorageAdapter<K, CacheItem<any>>) {}
+export class LRU<K, V> implements EvictionPolicy<K, V> {
+  constructor(private storage: StorageAdapter<K, CacheItem<K, V>>) {}
 
   onAccess(key: K): void {
     if (this.storage.has(key)) {
@@ -13,7 +12,7 @@ export class LRU<K> implements EvictionPolicy<K> {
     }
   }
 
-  onInsert<V>(key: K, value: CacheItem<V>): void {
+  onInsert(key: K, value: CacheItem<K, V>): void {
     this.storage.set(key, value);
   }
 
@@ -40,8 +39,7 @@ export class LRU<K> implements EvictionPolicy<K> {
     if (lowestPriorityKey !== null) {
       const entry = this.storage.get(lowestPriorityKey);
       if (entry && entry.onExpire) {
-        const deserializedValue = Serializer.deserialize(entry.value);
-        entry.onExpire(lowestPriorityKey, deserializedValue);
+        entry.onExpire(lowestPriorityKey, entry.value);
       }
 
       this.storage.delete(lowestPriorityKey);

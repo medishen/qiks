@@ -119,6 +119,33 @@ describe('QIKS Integration Tests', () => {
   });
 
   describe('Cache Events', () => {
+    it('should emit a "change" event on setting a value', (done) => {
+      const myKey = 'key1';
+      cache.set(myKey, 'value');
+      cache.on(
+        'change',
+        (key, value) => {
+          expect(key).to.equal(myKey);
+          expect(value).to.equal('newValue');
+          done();
+        },
+        { key: myKey },
+      );
+      cache.set(myKey, 'newValue');
+    });
+    it('should emit and handle a custom event', (done) => {
+      const customEvent = 'customEvent';
+      const myKey = 'key1';
+      const myValue = 'customValue';
+      const customEventCallback = (key: string, value: string) => {
+        expect(key).to.equal(myKey);
+        expect(value).to.equal(myValue);
+        done();
+      };
+
+      cache.on(customEvent, customEventCallback);
+      cache.emit(customEvent, myKey, myValue);
+    });
     it('should emit a "set" event on setting a value', (done) => {
       cache.on('set', (key, value) => {
         expect(key).to.equal('key1');
@@ -146,6 +173,21 @@ describe('QIKS Integration Tests', () => {
         done();
       });
       cache.delete('key1');
+    });
+    it('should remove a listener with "off"', (done) => {
+      const customEvent = 'customEvent';
+      const myKey = 'key1';
+      const myValue = 'customValue';
+
+      const customEventCallback = (key: string, value: string) => {
+        expect(key).to.equal(myKey);
+        expect(value).to.equal(myValue);
+        done();
+      };
+      cache.on(customEvent, customEventCallback);
+      cache.emit(customEvent, myKey, myValue);
+      cache.off(customEvent, customEventCallback);
+      cache.emit(customEvent, myKey, myValue);
     });
   });
 

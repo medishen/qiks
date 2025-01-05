@@ -47,18 +47,9 @@ cache.set('user1', { name: 'John' }, { ttl: 60000 });  // Expires in 1 minute
 
 **Q5: Can I use custom serialization for cache items?**  
 **A5:**  
-Yes, you can use a custom serializer and deserializer by passing a `CacheSerializer` object when initializing the cache. This allows you to control how cache items are stored and retrieved.
+This feature has been removed in version 1.1.0. In previous versions, it was possible to pass a `CacheSerializer` object to control how cache items were stored and retrieved using custom serialization and deserialization methods. However, starting with version 1.1.0, custom serialization is no longer supported directly.
 
-Example:
-
-```typescript
-const customSerializer = {
-  serialize: (value: any) => JSON.stringify(value),
-  deserialize: (value: string) => JSON.parse(value),
-};
-
-const cache = new Qiks<string, string>({ serializer: customSerializer });
-```
+If you need to customize the way items are serialized, consider doing so outside of the cache layer before storing items in the cache.
 
 ---
 

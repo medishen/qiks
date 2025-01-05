@@ -2,7 +2,6 @@ import { beforeEach, describe, it } from 'mocha';
 import { performance } from 'perf_hooks';
 import { expect } from 'chai';
 import { Qiks } from '../../src';
-import { Serializer } from '../../src/core/managers/Serializer';
 
 describe('Enhanced Performance Tests for Qiks', function () {
   this.timeout(60000);
@@ -12,7 +11,6 @@ describe('Enhanced Performance Tests for Qiks', function () {
   beforeEach(() => {
     cache = new Qiks({
       maxSize: 10_000,
-      serializer: Serializer,
       storage: new Map(),
       policy: 'LRU',
     });

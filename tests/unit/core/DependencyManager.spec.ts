@@ -5,12 +5,12 @@ import { CacheItem, StorageAdapter } from '../../../src/types/CacheTypes';
 import { createStorageAdapter } from '../../../src/utils';
 
 describe('DependencyManager', () => {
-  let storage: StorageAdapter<string, CacheItem<string>>;
+  let storage: StorageAdapter<string, CacheItem<string, string>>;
   let dependencyManager: DependencyManager<string, string>;
-  const mapStorage = new Map<string, CacheItem<string>>();
+  const mapStorage = new Map<string, CacheItem<string, string>>();
 
   beforeEach(() => {
-    storage = createStorageAdapter<string, CacheItem<string>>(mapStorage);
+    storage = createStorageAdapter<string, CacheItem<string, string>>(mapStorage);
     dependencyManager = new DependencyManager<string, string>(storage);
   });
 

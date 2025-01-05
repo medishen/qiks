@@ -5,20 +5,14 @@ import { createStorageAdapter } from '../../../src/utils';
 import { CacheError } from '../../../src/errors/CacheError';
 import { NamespaceCache } from '../../../src/core/managers/NamespaceManager';
 describe('NamespaceCache', () => {
-  let storage: StorageAdapter<string, CacheItem<string>>;
+  let storage: StorageAdapter<string, CacheItem<string, object>>;
   let namespaceCache: NamespaceCache<string, object>;
-  const serializer = {
-    serialize: JSON.stringify,
-    deserialize: JSON.parse,
-  };
-
   beforeEach(() => {
-    const rawStorage = new Map<string, CacheItem<string>>();
-    storage = createStorageAdapter<string, CacheItem<string>>(rawStorage);
+    const rawStorage = new Map<string, CacheItem<string, object>>();
+    storage = createStorageAdapter<string, CacheItem<string, object>>(rawStorage);
     namespaceCache = new NamespaceCache({
       namespace: 'testNamespace',
       parentStorage: storage,
-      serializer: serializer,
       policy: 'LRU',
     });
   });
@@ -47,7 +41,6 @@ describe('NamespaceCache', () => {
       const anotherNamespaceCache = new NamespaceCache({
         namespace: 'anotherNamespace',
         parentStorage: storage,
-        serializer: serializer,
         policy: 'LRU',
       });
 
@@ -122,7 +115,6 @@ describe('NamespaceCache', () => {
       const specialNamespaceCache = new NamespaceCache({
         namespace: 'special@namespace!',
         parentStorage: storage,
-        serializer: serializer,
         policy: 'LRU',
       });
       specialNamespaceCache.set('user1', { name: 'Alice' });
@@ -141,7 +133,6 @@ describe('NamespaceCache', () => {
         new NamespaceCache({
           namespace: '',
           parentStorage: storage,
-          serializer: serializer,
           policy: 'LRU',
         });
       }).to.throw(CacheError, 'Namespace name must not be empty');
@@ -171,7 +162,6 @@ describe('NamespaceCache', () => {
       const anotherNamespaceCache = new NamespaceCache({
         namespace: 'anotherNamespace',
         parentStorage: storage,
-        serializer: serializer,
         policy: 'LRU',
       });
 
@@ -194,7 +184,6 @@ describe('NamespaceCache', () => {
       const anotherNamespaceCache = new NamespaceCache({
         namespace: 'testNamespaceExtra',
         parentStorage: storage,
-        serializer: serializer,
         policy: 'LRU',
       });
       namespaceCache.set('user1', { name: 'Alice' });

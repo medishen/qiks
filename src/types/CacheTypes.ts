@@ -1,10 +1,10 @@
-export interface CacheItem<V> {
+export interface CacheItem<K, V> {
   value: V;
   expiry?: number | null;
   frequency?: number;
-  dependents?: Set<string>;
-  onExpire?: (key: any, value: V) => void;
-  swr?: SWRPolicy<V>;
+  dependents?: Set<K>;
+  onExpire?: (key: K, value: V) => void;
+  swr?: SWRPolicy<K, V>;
   priority?: number;
 }
 export interface CacheItemOptions<K, V> {
@@ -12,22 +12,22 @@ export interface CacheItemOptions<K, V> {
   dependsOn?: K;
   onExpire?: (key: K, value: V) => void;
   priority?: number;
-  swr?: SWROptions<V>;
+  swr?: SWROptions<K, V>;
 }
-export interface SWROptions<V> {
+export interface SWROptions<K, V> {
   revalidate: () => Promise<V>;
   staleThreshold: number;
 }
-export interface SWRPolicy<V> extends SWROptions<V> {
+export interface SWRPolicy<K, V> extends SWROptions<K, V> {
   isRunning: boolean;
   lastFetched?: number;
 }
-export interface CacheSerializer {
-  serialize<V>(data: V): string;
-  deserialize<V>(data: string): V;
-}
-export type CacheEventType = 'set' | 'get' | 'delete' | 'expire' | string;
+export type CacheEventType = 'set' | 'get' | 'delete' | 'expire' | 'change' | string;
+export type EventParams<K> = {
+  key: K;
+};
 export type EventCallback<K, V> = (key: K, value?: V) => void;
+export type ObserverCallback<K, V> = EventCallback<K, V>;
 export type EvictionPolicyType = 'LRU' | 'MRU' | 'LFU';
 export interface StorageAdapter<K, V> {
   type: 'Map' | 'WeakMap' | 'Custom';
@@ -40,22 +40,19 @@ export interface StorageAdapter<K, V> {
   keys(): IterableIterator<K>;
   entries(): IterableIterator<[K, V]>;
 }
-export type CacheStorage<K> = Map<K, CacheItem<string>> | WeakMap<object, CacheItem<string>>;
+export type CacheStorage<K> = Map<K, CacheItem<K, string>> | WeakMap<object, CacheItem<K, string>>;
 interface BaseCacheConfig {
   maxSize?: number;
   policy?: EvictionPolicyType;
 }
-export interface CacheConfig<K> extends BaseCacheConfig {
-  serializer: CacheSerializer;
-  storage: StorageAdapter<K, CacheItem<string>>;
+export interface CacheConfig<K, V> extends BaseCacheConfig {
+  storage: StorageAdapter<K, CacheItem<K, V>>;
 }
 export interface CacheConfigQiks<K> extends BaseCacheConfig {
-  serializer?: CacheSerializer;
   storage?: CacheStorage<K>;
 }
 export interface NamespaceCacheConfig<K, V> extends BaseCacheConfig {
-  serializer: CacheSerializer;
-  parentStorage: StorageAdapter<K, CacheItem<string>>;
+  parentStorage: StorageAdapter<K, CacheItem<K, V>>;
   namespace: string;
 }
 export interface GetOptions<K> {

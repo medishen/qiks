@@ -6,7 +6,7 @@ import { CacheError } from '../../../src/errors/CacheError';
 
 describe('TTLManager', () => {
   let ttlManager: TTLManager;
-
+  type ItemType = CacheItem<string, any>;
   beforeEach(() => {
     ttlManager = new TTLManager();
   });
@@ -25,7 +25,7 @@ describe('TTLManager', () => {
   it('correctly identifies expired entries', async () => {
     const ttl = 100;
     const expiry = ttlManager.setTTL(ttl);
-    const entry: CacheItem<string> = { value: 'test', expiry };
+    const entry: ItemType = { value: 'test', expiry };
 
     expect(ttlManager.isExpired(entry)).to.be.false;
 
@@ -34,20 +34,20 @@ describe('TTLManager', () => {
   });
 
   it('handles entries with no expiry set', () => {
-    const entry: CacheItem<string> = { value: 'test', expiry: null };
+    const entry: ItemType = { value: 'test', expiry: null };
     expect(ttlManager.isExpired(entry)).to.be.false;
   });
 
   it('handles edge case when expiry time is exactly the current time', () => {
     const expiry = Date.now();
-    const entry: CacheItem<string> = { value: 'test', expiry };
+    const entry: ItemType = { value: 'test', expiry };
 
     expect(ttlManager.isExpired(entry)).to.be.true;
   });
 
   it('handles entries where expiry time is in the past', () => {
     const expiry = Date.now() - 1000;
-    const entry: CacheItem<string> = { value: 'test', expiry };
+    const entry: ItemType = { value: 'test', expiry };
     expect(ttlManager.isExpired(entry)).to.be.true;
   });
 
@@ -60,7 +60,7 @@ describe('TTLManager', () => {
   it('handles small TTL values accurately', async () => {
     const ttl = 1;
     const expiry = ttlManager.setTTL(ttl);
-    const entry: CacheItem<string> = { value: 'test', expiry };
+    const entry: ItemType = { value: 'test', expiry };
     expect(ttlManager.isExpired(entry)).to.be.false;
     await new Promise((resolve) => setTimeout(resolve, 2));
     expect(ttlManager.isExpired(entry)).to.be.true;
@@ -68,14 +68,14 @@ describe('TTLManager', () => {
 
   describe('Edge Cases', () => {
     it('handles undefined expiry gracefully', () => {
-      const entry: CacheItem<string> = { value: 'test' };
+      const entry: ItemType = { value: 'test' };
       expect(ttlManager.isExpired(entry)).to.be.false;
     });
 
     it('handles boundary case where TTL is just 1ms', async () => {
       const ttl = 1;
       const expiry = ttlManager.setTTL(ttl);
-      const entry: CacheItem<string> = { value: 'test', expiry };
+      const entry: ItemType = { value: 'test', expiry };
       expect(ttlManager.isExpired(entry)).to.be.false;
       await new Promise((resolve) => setTimeout(resolve, 1));
       expect(ttlManager.isExpired(entry)).to.be.true;
@@ -84,7 +84,7 @@ describe('TTLManager', () => {
     it('handles entries with null value but valid expiry', () => {
       const ttl = 1000;
       const expiry = ttlManager.setTTL(ttl);
-      const entry: CacheItem<null> = { value: null, expiry };
+      const entry: CacheItem<null, any> = { value: null, expiry };
 
       expect(ttlManager.isExpired(entry)).to.be.false;
     });
@@ -92,7 +92,7 @@ describe('TTLManager', () => {
     it('handles entries with complex value and valid expiry', () => {
       const ttl = 1000;
       const expiry = ttlManager.setTTL(ttl);
-      const entry: CacheItem<object> = { value: { key: 'value' }, expiry };
+      const entry: CacheItem<object, any> = { value: { key: 'value' }, expiry };
 
       expect(ttlManager.isExpired(entry)).to.be.false;
     });
@@ -100,7 +100,7 @@ describe('TTLManager', () => {
     it('handles rapid successive calls to check expiration', async () => {
       const ttl = 10;
       const expiry = ttlManager.setTTL(ttl);
-      const entry: CacheItem<string> = { value: 'test', expiry };
+      const entry: ItemType = { value: 'test', expiry };
       for (let i = 0; i < 5; i++) {
         expect(ttlManager.isExpired(entry)).to.be.false;
         await new Promise((resolve) => setTimeout(resolve, 1));

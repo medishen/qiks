@@ -4,20 +4,20 @@ import { expect } from 'chai';
 import { PatternMatcher } from '../../../src/utils/PatternMatcher';
 
 describe('PatternMatcher', () => {
-  let storage: StorageAdapter<string, CacheItem<string>>;
-  const mapStorage = new Map<string, CacheItem<string>>();
+  let storage: StorageAdapter<string, CacheItem<string, string>>;
+  const mapStorage = new Map<string, CacheItem<string, string>>();
 
   beforeEach(() => {
-    storage = createStorageAdapter<string, CacheItem<string>>(mapStorage);
+    storage = createStorageAdapter<string, CacheItem<string, string>>(mapStorage);
     storage.clear!();
 
     // Populate the storage with test data
-    storage.set!('user:1', { value: JSON.stringify('John Doe') });
-    storage.set!('user:2', { value: JSON.stringify('Jane Smith') });
-    storage.set!('admin:1', { value: JSON.stringify('Admin User') });
-    storage.set!('logs:2023', { value: JSON.stringify('Log Entry 2023') });
-    storage.set!('settings:theme', { value: JSON.stringify('dark') });
-    storage.set!('settings:language', { value: JSON.stringify('en') });
+    storage.set!('user:1', { value: 'John Doe' });
+    storage.set!('user:2', { value: 'Jane Smith' });
+    storage.set!('admin:1', { value: 'Admin User' });
+    storage.set!('logs:2023', { value: 'Log Entry 2023' });
+    storage.set!('settings:theme', { value: 'dark' });
+    storage.set!('settings:language', { value: 'en' });
   });
 
   it('should find matches based on glob patterns', () => {

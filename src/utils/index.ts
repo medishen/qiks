@@ -1,6 +1,5 @@
 import { Cache } from '../core/Cache';
 import { DependencyManager } from '../core/managers/DependencyManager';
-import { Serializer } from '../core/managers/Serializer';
 import { CacheError } from '../errors/CacheError';
 import { LFU } from '../eviction/LFU';
 import { LRU } from '../eviction/LRU';
@@ -9,23 +8,7 @@ import { CacheConfig, CacheItem, StorageAdapter } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
 import { WeakStorage } from './WeakStorage';
 
-export function validateOptions<K>(options: CacheConfig<K>): void {
-  if (typeof options.serializer.serialize !== 'function' || typeof options.serializer.deserialize !== 'function') {
-    throw new CacheError('Invalid serializer provided');
-  }
-  try {
-    const testValue = options.serializer.serialize({});
-    if (testValue === null || testValue === undefined) {
-      throw new CacheError('Invalid serializer: serialize returned null or undefined');
-    }
-
-    const deserializedValue = options.serializer.deserialize('{}');
-    if (deserializedValue === null || deserializedValue === undefined) {
-      throw new CacheError('Invalid serializer: deserialize returned null or undefined');
-    }
-  } catch (error) {
-    throw new CacheError('Invalid serializer: error during serialization/deserialization');
-  }
+export function validateOptions<K, V>(options: CacheConfig<K, V>): void {
   if (options.maxSize! <= 0) {
     throw new CacheError('maxSize must be greater than 0');
   }
@@ -34,7 +17,7 @@ export function validateOptions<K>(options: CacheConfig<K>): void {
   }
 }
 
-export function initializeEvictionPolicy<K>(options: CacheConfig<K>): EvictionPolicy<K> {
+export function initializeEvictionPolicy<K, V>(options: CacheConfig<K, V>): EvictionPolicy<K, V> {
   switch (options.policy) {
     case 'LRU':
       return new LRU(options.storage);
@@ -121,15 +104,14 @@ export function createStorageAdapter<K, V>(storage: any): StorageAdapter<K, V> {
   }
 }
 
-export function isWeak<K>(storage: StorageAdapter<K, CacheItem<string>>): boolean {
+export function isWeak<K, V>(storage: StorageAdapter<K, CacheItem<K, V>>): boolean {
   return storage.type === 'WeakMap';
 }
-export function expireKeyRecursively<K, V>(opts: { key: K; storage: StorageAdapter<K, CacheItem<string>>; dependencyManager: DependencyManager<K, V>; evictionPolicy: EvictionPolicy<K> }): void {
+export function expireKeyRecursively<K, V>(opts: { key: K; storage: StorageAdapter<K, CacheItem<K, V>>; dependencyManager: DependencyManager<K, V>; evictionPolicy: EvictionPolicy<K, V> }): void {
   const entry = opts.storage.get(opts.key);
   if (!entry) return;
   if (entry.onExpire) {
-    const deserializedValue = Serializer.deserialize<string>(entry.value);
-    entry.onExpire(opts.key, deserializedValue);
+    entry.onExpire(opts.key, entry.value);
   }
   const dependents = opts.dependencyManager.getDependents(opts.key);
   if (dependents) {
@@ -141,3 +123,25 @@ export function expireKeyRecursively<K, V>(opts: { key: K; storage: StorageAdapt
   opts.evictionPolicy.onRemove(opts.key);
   opts.storage.delete(opts.key);
 }
+export const __awaiter = `
+    function __awaiter(thisArg, _arguments, P, generator) {
+      const PromiseConstructor = P || Promise;
+      return new PromiseConstructor((resolve, reject) => {
+        function fulfilled(value) {
+          try { step(generator.next(value)); } 
+          catch (e) { reject(e); }
+        }
+        function rejected(value) {
+          try { step(generator.throw(value)); } 
+          catch (e) { reject(e); }
+        }
+        function step(result) {
+          result.done
+            ? resolve(result.value)
+            : new PromiseConstructor((resolve) => resolve(result.value))
+                .then(fulfilled, rejected);
+        }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+      });
+    }
+  `;

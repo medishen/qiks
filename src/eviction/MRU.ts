@@ -1,15 +1,14 @@
-import { Serializer } from '../core/managers/Serializer';
 import { CacheItem, StorageAdapter } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
 
-export class MRU<K> implements EvictionPolicy<K> {
-  constructor(private storage: StorageAdapter<K, CacheItem<any>>) {}
+export class MRU<K, V> implements EvictionPolicy<K, V> {
+  constructor(private storage: StorageAdapter<K, CacheItem<K, V>>) {}
 
   onAccess(key: K): void {
     // MRU does not require changes on access
   }
 
-  onInsert<V>(key: K, value: CacheItem<V>): void {
+  onInsert(key: K, value: CacheItem<K, V>): void {
     this.storage.set(key, value);
   }
 
@@ -36,8 +35,7 @@ export class MRU<K> implements EvictionPolicy<K> {
     if (mostRecentKey !== undefined) {
       const entry = this.storage.get(mostRecentKey);
       if (entry && entry.onExpire) {
-        const deserializedValue = Serializer.deserialize(entry.value);
-        entry.onExpire(mostRecentKey, deserializedValue);
+        entry.onExpire(mostRecentKey, entry.value);
       }
       this.storage.delete(mostRecentKey);
       return mostRecentKey;

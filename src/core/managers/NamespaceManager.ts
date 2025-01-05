@@ -15,13 +15,12 @@ export class NamespaceManager {
 }
 export class NamespaceCache<K, V> extends Cache<K, V> {
   constructor(private config: NamespaceCacheConfig<K, V>) {
-    const { parentStorage, namespace, serializer, policy } = config;
+    const { parentStorage, namespace, policy } = config;
     if (!namespace) {
       throw new CacheError('Namespace name must not be empty');
     }
     super({
       storage: parentStorage,
-      serializer: serializer,
       policy: policy,
     });
   }

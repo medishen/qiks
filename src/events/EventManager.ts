@@ -1,21 +1,31 @@
 import { Cache } from '../core/Cache';
-import { CacheEventType, EventCallback, StorageAdapter } from '../types/CacheTypes';
+import { ObserverManager } from '../core/managers/ObserverManager';
+import { CacheEventType, CacheItem, EventCallback, EventParams, StorageAdapter } from '../types/CacheTypes';
 
 export class EventManager<K, V> {
-  constructor(private storage: StorageAdapter<string, Set<EventCallback<K, V>>>) {}
-  on(event: CacheEventType, callback: EventCallback<K, V>): void {
-    const eventKey = this.getEventKey(event);
-    let listeners = this.storage.get(eventKey);
-    if (!listeners) {
-      listeners = new Set<EventCallback<K, V>>();
-      this.storage.set(eventKey, listeners);
+  constructor(private storage: StorageAdapter<K, CacheItem<K, V>>, private observerManager?: ObserverManager<K, V>) {}
+  on(event: CacheEventType, callback: EventCallback<K, V>, params?: EventParams<K>): void {
+    if (event === 'change') {
+      return this.observerManager?.observeKey(params!.key, callback);
     }
+    const eventKey = this.getEventKey(event);
+    let listenersItem = this.storage.get(eventKey);
+    if (!listenersItem) {
+      listenersItem = { value: new Set<EventCallback<K, V>>() } as CacheItem<K, V>;
+      this.storage.set(eventKey, listenersItem);
+    }
+
+    const listeners = listenersItem.value as Set<EventCallback<K, V>>;
     listeners.add(callback);
   }
-  off(event: CacheEventType, callback: EventCallback<K, V>): void {
+  off(event: CacheEventType, callback: EventCallback<K, V>, params?: EventParams<K>): void {
+    if (event === 'change') {
+      return this.observerManager?.unobserveKey(params!.key, callback);
+    }
     const eventKey = this.getEventKey(event);
-    const listeners = this.storage.get(eventKey);
-    if (listeners) {
+    const listenersItem = this.storage.get(eventKey);
+    if (listenersItem) {
+      const listeners = listenersItem.value as Set<EventCallback<K, V>>;
       listeners.delete(callback);
       if (listeners.size === 0) {
         this.storage.delete(eventKey);
@@ -24,8 +34,10 @@ export class EventManager<K, V> {
   }
   emit(event: CacheEventType, key: K, value?: V): void {
     const eventKey = this.getEventKey(event);
-    const listeners = this.storage.get(eventKey);
-    if (listeners) {
+    const listenersItem = this.storage.get(eventKey);
+
+    if (listenersItem) {
+      const listeners = listenersItem.value as Set<EventCallback<K, V>>;
       for (const callback of listeners) {
         try {
           callback(key, value);
@@ -35,7 +47,7 @@ export class EventManager<K, V> {
       }
     }
   }
-  private getEventKey(event: CacheEventType): string {
-    return `${Cache.INTERNAL_PREFIX}event:${event}`;
+  private getEventKey(event: CacheEventType): K {
+    return `${Cache.INTERNAL_PREFIX}event:${event}` as K;
   }
 }

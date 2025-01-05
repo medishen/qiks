@@ -1,18 +1,17 @@
 import { CacheItem, StorageAdapter } from '../../types/CacheTypes';
 
 export class DependencyManager<K, V> {
-  constructor(private storage: StorageAdapter<K, CacheItem<string>>) {}
+  constructor(private storage: StorageAdapter<K, CacheItem<K, V>>) {}
 
   addDependency(parentKey: K, dependentKey: K): void {
     const parentEntry = this.storage.get(parentKey);
     if (!parentEntry) {
       throw new Error(`Parent key "${parentKey}" does not exist.`);
     }
-
     if (!parentEntry.dependents) {
-      parentEntry.dependents = new Set<string>();
+      parentEntry.dependents = new Set<K>();
     }
-    parentEntry.dependents.add(dependentKey as unknown as string);
+    parentEntry.dependents.add(dependentKey);
     this.storage.set(parentKey, parentEntry);
   }
 
@@ -20,7 +19,7 @@ export class DependencyManager<K, V> {
     const parentEntry = this.storage.get(parentKey);
     if (!parentEntry || !parentEntry.dependents) return;
 
-    parentEntry.dependents.delete(dependentKey as unknown as string);
+    parentEntry.dependents.delete(dependentKey);
     if (parentEntry.dependents.size === 0) {
       delete parentEntry.dependents;
     }
@@ -30,7 +29,7 @@ export class DependencyManager<K, V> {
   getDependents(key: K): Set<K> | null {
     const entry = this.storage.get(key);
     if (!entry || !entry.dependents) return null;
-    return new Set([...entry.dependents] as K[]);
+    return new Set<K>([...entry.dependents]);
   }
 
   clearDependencies(key: K): void {
@@ -42,8 +41,8 @@ export class DependencyManager<K, V> {
     this.storage.set(key, entry);
 
     dependents.forEach((dependentKey) => {
-      this.clearDependencies(dependentKey as unknown as K);
-      this.storage.delete(dependentKey as unknown as K);
+      this.clearDependencies(dependentKey);
+      this.storage.delete(dependentKey);
     });
   }
 }

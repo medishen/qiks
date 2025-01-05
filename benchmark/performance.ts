@@ -1,18 +1,15 @@
 import { Cache } from '../dist/core/Cache';
 import { createStorageAdapter } from '../dist/utils/index';
 import { performance } from 'perf_hooks';
+import { CacheItem } from '../src/types/CacheTypes';
 // Custom Storage Adapter (Map)
 const storage = new Map<string, any>();
-const storageAdapter = createStorageAdapter<string, any>(storage);
+const storageAdapter = createStorageAdapter<string, CacheItem<string, any>>(storage);
 
 // Benchmark Cache
 const cache = new Cache<string, any>({
   storage: storageAdapter,
   maxSize: 1000,
-  serializer: {
-    serialize: (data: any) => JSON.stringify(data),
-    deserialize: (data: string) => JSON.parse(data),
-  },
   policy: 'LRU',
 });
 

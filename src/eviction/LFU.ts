@@ -1,8 +1,7 @@
-import { Serializer } from '../core/managers/Serializer';
 import { CacheItem, StorageAdapter } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
-export class LFU<K> implements EvictionPolicy<K> {
-  constructor(private storage: StorageAdapter<K, CacheItem<any>>) {}
+export class LFU<K, V> implements EvictionPolicy<K, V> {
+  constructor(private storage: StorageAdapter<K, CacheItem<K, V>>) {}
 
   onAccess(key: K): void {
     const entry = this.storage.get(key);
@@ -12,7 +11,7 @@ export class LFU<K> implements EvictionPolicy<K> {
     }
   }
 
-  onInsert<V>(key: K, value: CacheItem<V>): void {
+  onInsert(key: K, value: CacheItem<K, V>): void {
     this.storage.set(key, { ...value, frequency: 1 });
   }
 
@@ -37,8 +36,7 @@ export class LFU<K> implements EvictionPolicy<K> {
     if (leastFrequentKey !== null) {
       const entry = this.storage.get(leastFrequentKey);
       if (entry && entry.onExpire) {
-        const deserializedValue = Serializer.deserialize(entry.value);
-        entry.onExpire(leastFrequentKey, deserializedValue);
+        entry.onExpire(leastFrequentKey, entry.value);
       }
       this.storage.delete(leastFrequentKey);
       return leastFrequentKey;

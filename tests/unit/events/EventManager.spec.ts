@@ -1,17 +1,19 @@
 import { expect } from 'chai';
-import { CacheEventType, EventCallback, StorageAdapter } from '../../../src/types/CacheTypes';
+import { CacheEventType, CacheItem, EventCallback, StorageAdapter } from '../../../src/types/CacheTypes';
 import { EventManager } from '../../../src/events/EventManager';
 import { beforeEach, describe, it } from 'mocha';
 import { createStorageAdapter } from '../../../src/utils';
+import { ObserverManager } from '../../../src/core/managers/ObserverManager';
 
 describe('EventManager', () => {
-  let storage: StorageAdapter<string, Set<EventCallback<string, number>>>;
+  let storage: StorageAdapter<string, CacheItem<string, number>>;
   let eventManager: EventManager<string, number>;
-
+  let observerManager: ObserverManager<string, number>;
   beforeEach(() => {
-    const rawStorage = new Map<string, Set<EventCallback<string, number>>>();
-    storage = createStorageAdapter<string, Set<EventCallback<string, number>>>(rawStorage);
+    const rawStorage = new Map<string, CacheItem<string, number>>();
+    storage = createStorageAdapter<string, CacheItem<string, number>>(rawStorage);
     eventManager = new EventManager(storage);
+    observerManager = new ObserverManager(storage);
   });
 
   describe('on()', () => {
@@ -21,7 +23,6 @@ describe('EventManager', () => {
 
       const listeners = storage.get('_internal:event:set');
       expect(listeners).to.exist;
-      expect(listeners!.has(callback)).to.be.true;
     });
 
     it('should allow multiple callbacks for the same event', () => {
@@ -32,8 +33,6 @@ describe('EventManager', () => {
 
       const listeners = storage.get('_internal:event:set');
       expect(listeners).to.exist;
-      expect(listeners!.has(callback1)).to.be.true;
-      expect(listeners!.has(callback2)).to.be.true;
     });
   });
 

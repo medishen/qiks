@@ -1,4 +1,3 @@
-import { Serializer } from '../core/managers/Serializer';
 import { CacheItem, GetOptions, StorageAdapter } from '../types/CacheTypes';
 
 export class PatternMatcher {
@@ -12,14 +11,14 @@ export class PatternMatcher {
     return new RegExp(`^${regexString}$`);
   }
 
-  public static findMatches<K, V>(pattern: string, storage: StorageAdapter<K, CacheItem<string>>, options: GetOptions<K>): Array<K | V | [K, V]> {
+  public static findMatches<K, V>(pattern: string, storage: StorageAdapter<K, CacheItem<K, V>>, options: GetOptions<K>): Array<K | V | [K, V]> {
     const regex = this.globToRegex(pattern);
     const results: Array<K | V | [K, V]> = [];
     for (const [key, entry] of storage.entries()) {
       if (typeof key === 'string' && regex.test(key)) {
         if (options.minLen && key.length < options.minLen) continue;
         if (options.maxLen && key.length > options.maxLen) continue;
-        const deserializedValue = entry?.value ? Serializer.deserialize(entry.value) : null;
+        const value = entry?.value ? entry.value : null;
         if (options.prefix && !key.startsWith(options.prefix)) continue;
         if (options.suffix && !key.endsWith(options.suffix)) continue;
         if (options.exclude) {
@@ -37,15 +36,15 @@ export class PatternMatcher {
             continue;
           }
         }
-        if (options.filter && !options.filter(key, deserializedValue)) continue;
+        if (options.filter && !options.filter(key, value)) continue;
 
         // Build results
         if ((options.keys && options.values) || options.withTuples) {
-          results.push([key as K, deserializedValue as V]);
+          results.push([key as K, value as V]);
         } else if (options.keys) {
           results.push(key as K);
-        } else if (options.values && deserializedValue !== null) {
-          results.push(deserializedValue as V);
+        } else if (options.values && value !== null) {
+          results.push(value as V);
         }
 
         if (results.length >= (options.limit ?? Infinity)) break;

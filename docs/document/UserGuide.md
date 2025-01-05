@@ -29,10 +29,12 @@ Qiks is a high-performance, flexible caching system designed for various applica
 ### **1. Cache Configuration**
 
 Qiks allows you to configure the cache with multiple customizable options:
+
 - **`maxSize`**: Maximum number of cache entries before eviction is triggered.
 - **`policy`**: Eviction policy (e.g., `LRU` - Least Recently Used).
-- **`serializer`**: A custom serializer for serializing and deserializing cache data.
 - **`storage`**: A custom storage adapter for storing cache items (e.g., `Map`, `WeakMap`).
+
+Note: Serialization and deserialization were removed in version 1.1.0. Qiks no longer supports serialization and deserialization internally, and there is no built-in mechanism for this functionality in the system.
 
 Example:
 
@@ -40,7 +42,6 @@ Example:
 const cache = new Qiks<string, string>({
   maxSize: 200,
   policy: 'LRU',
-  serializer: CustomSerializer,
   storage: new Map(),
 });
 ```
@@ -98,6 +99,7 @@ cache.clear();
 ### **3. Eviction Policies**
 
 Qiks supports various eviction policies, including:
+
 - **LRU (Least Recently Used)**: Removes the least recently accessed cache items when the cache reaches its maximum size.
 
 The policy is automatically applied when the cache exceeds the `maxSize` limit.
@@ -188,22 +190,27 @@ userCache.set('user1', { name: 'John Doe' });
 
 ---
 
-### **9. Serialization and Deserialization**
+### **9. Serialization and Deserialization (Removed in Version 1.1.0)**
 
-Qiks uses a serializer and deserializer to handle the storage and retrieval of cache data. You can use a custom serializer by passing it during cache initialization.
-
-- **`serializer.serialize(value)`**: Serializes a value before storing it in the cache.
-- **`serializer.deserialize(value)`**: Deserializes a value when retrieving it from the cache.
+As of version 1.1.0, Qiks no longer supports serialization and deserialization internally. This feature has been removed, and there is no built-in method for serializing or deserializing data within the cache. If serialization is needed, it must be handled externally before storing values in Qiks or after retrieving them.
 
 Example:
 
 ```typescript
+// You will need to handle serialization manually
 const customSerializer = {
   serialize: (value) => JSON.stringify(value),
   deserialize: (value) => JSON.parse(value),
 };
 
-const cache = new Qiks<string, string>({ serializer: customSerializer });
+// Manually serialize before setting and deserialize after getting
+const cache = new Qiks<string, string>();
+
+const serializedData = customSerializer.serialize('some value');
+cache.set('key', serializedData);
+
+const cachedValue = cache.get('key');
+const deserializedData = customSerializer.deserialize(cachedValue);
 ```
 
 ---
@@ -211,6 +218,7 @@ const cache = new Qiks<string, string>({ serializer: customSerializer });
 ### **10. Size and Count Management**
 
 Qiks provides methods for querying the cache size:
+
 - **`size()`**: Returns the number of items in the cache.
 - **`countBy(prefix?)`**: Returns the number of items in the cache with a specific prefix.
 

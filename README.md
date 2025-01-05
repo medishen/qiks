@@ -29,7 +29,7 @@ Caching plays a key role in modern web applications, improving performance, redu
 
 - **Lightweight & Fast**: Designed with performance in mind, perfect for high-demand environments.
 - **Highly Configurable**: Flexible eviction policies, TTL support, cache namespaces, and more.
-- **Advanced Features**: Event-driven system, dependency management, and custom serialization options.
+- **Advanced Features**: Event-driven system, dependency management.
 - **TypeScript Support**: Fully typed, ensuring better developer experience and fewer errors.
 
 ## Features
@@ -38,7 +38,6 @@ Caching plays a key role in modern web applications, improving performance, redu
 
 - **In-Memory Caching**: Efficient and fast in-memory key-value storage.
 - **TTL (Time-To-Live)**: Automatically expires items based on the configured TTL.
-- **Custom Serialization**: Built-in JSON support with the option to provide custom serializers.
 - **Namespaces**: Create isolated cache domains for different parts of your application.
 - **Cache Events**: Listen to cache events (set, get, delete, expire, or custom event).
 - **Eviction Policies**: Supports LRU (Least Recently Used), LFU (Least Frequently Used), MRU (Most Recently Used)

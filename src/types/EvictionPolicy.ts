@@ -1,6 +1,6 @@
 import { CacheItem } from './CacheTypes';
 
-export interface EvictionPolicy<K> {
+export interface EvictionPolicy<K, V> {
   /**
    * Invoked when a key is accessed.
    */
@@ -9,7 +9,7 @@ export interface EvictionPolicy<K> {
   /**
    * Invoked when a key is inserted.
    */
-  onInsert<V>(key: K, value: CacheItem<V>): void;
+  onInsert(key: K, value: CacheItem<K, V>): void;
 
   /**
    * Invoked when a key is removed.

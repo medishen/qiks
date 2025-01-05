@@ -1,6 +1,6 @@
 import { CacheError } from '../errors/CacheError';
 import { EventManager } from '../events/EventManager';
-import { CacheEventType, CacheItemOptions, CacheConfig, StorageAdapter, CacheItem, EventCallback, GetOptions, SWRPolicy } from '../types/CacheTypes';
+import { CacheEventType, CacheItemOptions, CacheConfig, StorageAdapter, CacheItem, EventCallback, GetOptions, SWRPolicy, ObserverCallback, EventParams } from '../types/CacheTypes';
 import { EvictionPolicy } from '../types/EvictionPolicy';
 import { TTLManager } from './managers/TTLManager';
 import { expireKeyRecursively, initializeEvictionPolicy, isInternalKey, isWeak, validateKey, validateOptions } from '../utils';
@@ -8,22 +8,22 @@ import { ObserverManager } from './managers/ObserverManager';
 import { DependencyManager } from './managers/DependencyManager';
 import { PatternMatcher } from '../utils/PatternMatcher';
 export class Cache<K, V> {
-  private evictionPolicy: EvictionPolicy<K>;
+  private evictionPolicy: EvictionPolicy<K, V>;
   protected ttlManager: TTLManager;
   protected event: EventManager<K, V>;
-  protected storage: StorageAdapter<K, CacheItem<string>>;
+  protected storage: StorageAdapter<K, CacheItem<K, V>>;
   private isWeakStorage: boolean;
   public static readonly INTERNAL_PREFIX = '_internal:';
   private dependencyManager: DependencyManager<K, V>;
   protected observerManager: ObserverManager<K, V>;
-  constructor(protected options: CacheConfig<K>) {
+  constructor(protected options: CacheConfig<K, V>) {
     validateOptions(this.options);
     this.storage = this.options.storage;
     this.isWeakStorage = isWeak(this.storage);
     this.evictionPolicy = initializeEvictionPolicy(this.options);
     this.ttlManager = new TTLManager();
-    this.event = new EventManager<K, V>(this.storage as unknown as StorageAdapter<string, Set<EventCallback<K, V>>>);
-    this.observerManager = new ObserverManager<K, V>(this.storage);
+    this.observerManager = new ObserverManager(this.storage);
+    this.event = new EventManager(this.storage, this.observerManager);
     this.dependencyManager = new DependencyManager(this.storage);
   }
   set(key: K, value: V, options?: CacheItemOptions<K, V>): void {
@@ -31,7 +31,6 @@ export class Cache<K, V> {
     if (this.getUserKeyCount() >= (this.options.maxSize ?? Infinity)) {
       this.evictionPolicy.evict();
     }
-    const serializedValue = this.options.serializer!.serialize<V>(value);
     const expiry = options?.ttl ? this.ttlManager.setTTL(options.ttl) : null;
     this.observerManager.triggerObservers(key, value);
     if (options?.dependsOn) {
@@ -42,11 +41,11 @@ export class Cache<K, V> {
 
       this.dependencyManager.addDependency(parentKey, key);
     }
-    const cacheItem: CacheItem<string> = {
-      value: serializedValue,
+    const cacheItem: CacheItem<K, V> = {
+      value: value,
       expiry,
       priority: options?.priority ?? 0,
-      onExpire: options?.onExpire as ((key: any, value: string | null) => void) | undefined,
+      onExpire: options?.onExpire,
       swr: options?.swr
         ? {
             ...options.swr,
@@ -54,7 +53,7 @@ export class Cache<K, V> {
             revalidate: async () => {
               const rawValue = await options.swr!.revalidate();
               this.set(key, rawValue);
-              return this.options.serializer!.serialize(rawValue);
+              return rawValue;
             },
             lastFetched: Date.now(),
           }
@@ -98,8 +97,7 @@ export class Cache<K, V> {
     if (!entry) return null;
     if (this.ttlManager.isExpired(entry)) {
       if (entry.onExpire) {
-        const deserializedValue = this.options.serializer!.deserialize<string>(entry.value);
-        entry.onExpire(key, deserializedValue);
+        entry.onExpire(key, entry.value);
       }
       const dependents = this.dependencyManager.getDependents(key);
       if (dependents) {
@@ -113,22 +111,30 @@ export class Cache<K, V> {
       return null;
     }
     if (entry.swr) {
-      const swrPolicy: SWRPolicy<string> | undefined = entry.swr;
+      const swrPolicy: SWRPolicy<K, V> | undefined = entry.swr;
       if (this.isStale(swrPolicy)) {
         const freshEntry = this.storage.get(key);
         if (freshEntry) {
           if (swrPolicy.isRunning) {
-            return this.options.serializer.deserialize<V>(freshEntry.value);
+            return freshEntry.value;
           }
           swrPolicy.isRunning = true;
           return new Promise(async (resolve, reject) => {
             try {
               const freshData = await swrPolicy.revalidate();
-              const deserializedValue = this.options.serializer.deserialize<V>(freshData);
-              freshEntry.value = this.options.serializer.serialize(deserializedValue);
+              freshEntry.value = freshData;
               swrPolicy.lastFetched = Date.now();
-              this.storage.set(key, freshEntry);
-              resolve(freshData as V);
+              const updatedCacheItem: CacheItem<K, V> = {
+                value: freshData,
+                expiry: freshEntry.expiry,
+                frequency: freshEntry.frequency,
+                dependents: freshEntry.dependents,
+                onExpire: freshEntry.onExpire,
+                swr: freshEntry.swr,
+                priority: freshEntry.priority,
+              };
+              this.storage.set(key, updatedCacheItem);
+              resolve(freshData);
             } catch (error) {
               reject(new CacheError(`Failed to revalidate key "${key}": ${error}`));
             } finally {
@@ -137,23 +143,23 @@ export class Cache<K, V> {
           });
         }
       }
-      return this.options.serializer.deserialize<V>(entry.value);
+      return entry.value;
     }
-    const deserializedValue = this.options.serializer!.deserialize<V>(entry.value);
+    const value = entry.value;
     this.evictionPolicy.onAccess(key);
-    this.event.emit('get', key, deserializedValue);
+    this.event.emit('get', key, value);
     if (keys) {
       return [key as K];
     }
     if (values) {
-      return deserializedValue;
+      return value;
     }
     if (withTuples || (keys && values)) {
-      return [[key as K, deserializedValue]] as [K, V][];
+      return [[key as K, value]] as [K, V][];
     }
     return null;
   }
-  private isStale(swrPolicy: SWRPolicy<any>): boolean {
+  private isStale(swrPolicy: SWRPolicy<K, V>): boolean {
     const now = Date.now();
     return now - (swrPolicy.lastFetched || 0) >= swrPolicy.staleThreshold;
   }
@@ -163,8 +169,8 @@ export class Cache<K, V> {
     const entry = this.options.storage.get(key);
     if (!entry) return false;
     if (entry.onExpire) {
-      const deserializedValue = this.options.serializer!.deserialize<string>(entry.value);
-      entry.onExpire(key, deserializedValue);
+      const value = entry.value;
+      entry.onExpire(key, value);
     }
     const dependents = this.dependencyManager.getDependents(key);
     if (dependents) {
@@ -172,7 +178,7 @@ export class Cache<K, V> {
         this.delete(dependentKey);
       }
     }
-    const value = this.options.serializer!.deserialize<V>(entry.value);
+    const value = entry.value;
     this.observerManager.triggerObservers(key, value);
     this.dependencyManager.clearDependencies(key);
     this.evictionPolicy.onRemove(key);
@@ -215,18 +221,18 @@ export class Cache<K, V> {
     }
     return count;
   }
-  on(event: CacheEventType, callback: (key: K, value?: V) => void): void {
-    this.event.on(event, callback);
+  on(event: CacheEventType, callback: (key: K, value?: V) => void, params?: EventParams<K>): void {
+    if (event === 'change' && !params?.key) {
+      throw new CacheError('The "change" event requires a "key" to be specified in the params.');
+    }
+    this.event.on(event, callback, params);
   }
 
-  off(event: CacheEventType, callback: (key: K, value?: V) => void): void {
-    this.event.off(event, callback);
-  }
-  observeKey(key: K, callback: EventCallback<K, V>): void {
-    this.observerManager.observeKey(key, callback);
-  }
-  unobserveKey(key: K, callback: EventCallback<K, V>): void {
-    this.observerManager.unobserveKey(key, callback);
+  off(event: CacheEventType, callback: (key: K, value?: V) => void, params?: EventParams<K>): void {
+    if (event === 'change' && !params?.key) {
+      throw new CacheError('The "change" event requires a "key" to be specified in the params.');
+    }
+    this.event.off(event, callback, params);
   }
   keys() {
     return this.storage.keys();

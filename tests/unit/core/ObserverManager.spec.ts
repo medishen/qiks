@@ -8,9 +8,9 @@ import { CacheError } from '../../../src/errors/CacheError';
 describe('ObserverManager', () => {
   let storage: StorageAdapter<string, any>;
   let observerManager: ObserverManager<string, string>;
-  const mapStorage = new Map<any, CacheItem<string>>();
+  const mapStorage = new Map<any, CacheItem<string, string>>();
   beforeEach(() => {
-    storage = createStorageAdapter<any, CacheItem<string>>(mapStorage);
+    storage = createStorageAdapter<any, CacheItem<string, string>>(mapStorage);
     observerManager = new ObserverManager(storage);
   });
 

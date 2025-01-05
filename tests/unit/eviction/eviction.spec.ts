@@ -20,8 +20,8 @@ function createMockStorage() {
 
 describe('Eviction Policies', function () {
   describe('LRU (Least Recently Used)', function () {
-    let storage: StorageAdapter<string, CacheItem<any>>;
-    let lru: LRU<string>;
+    let storage: StorageAdapter<string, CacheItem<string, any>>;
+    let lru: LRU<string, string>;
 
     beforeEach(function () {
       storage = createMockStorage();
@@ -62,8 +62,8 @@ describe('Eviction Policies', function () {
   });
 
   describe('MRU (Most Recently Used)', function () {
-    let storage: StorageAdapter<string, CacheItem<any>>;
-    let mru: MRU<string>;
+    let storage: StorageAdapter<string, CacheItem<string, any>>;
+    let mru: MRU<string, string>;
 
     beforeEach(function () {
       storage = createMockStorage();
@@ -93,7 +93,7 @@ describe('Eviction Policies', function () {
 
   describe('LFU (Least Frequently Used)', function () {
     let storage: StorageAdapter<string, { value: any; frequency: number }>;
-    let lfu: LFU<string>;
+    let lfu: LFU<string, string>;
 
     beforeEach(function () {
       storage = createMockStorage();
@@ -125,8 +125,8 @@ describe('Eviction Policies', function () {
     });
   });
   describe('LRU with Priority', function () {
-    let storage: StorageAdapter<string, CacheItem<any>>;
-    let lru: LRU<string>;
+    let storage: StorageAdapter<string, CacheItem<string, any>>;
+    let lru: LRU<string, string>;
 
     beforeEach(function () {
       storage = createMockStorage();
@@ -171,8 +171,8 @@ describe('Eviction Policies', function () {
     });
   });
   describe('MRU with Priority', function () {
-    let storage: StorageAdapter<string, CacheItem<any>>;
-    let mru: MRU<string>;
+    let storage: StorageAdapter<string, CacheItem<string, any>>;
+    let mru: MRU<string, string>;
 
     beforeEach(function () {
       storage = createMockStorage();
@@ -199,8 +199,6 @@ describe('Eviction Policies', function () {
       mru.onInsert('d', { value: 'item4', priority: 1 });
 
       const evictedKey = mru.evict();
-      console.log('evictedKey', evictedKey);
-
       expect(evictedKey).to.equal('d');
     });
 
@@ -217,8 +215,8 @@ describe('Eviction Policies', function () {
     });
   });
   describe('LFU with Priority', function () {
-    let storage: StorageAdapter<string, CacheItem<any>>;
-    let lfu: LFU<string>;
+    let storage: StorageAdapter<string, CacheItem<string, any>>;
+    let lfu: LFU<string, string>;
 
     beforeEach(function () {
       storage = createMockStorage();

@@ -2,7 +2,6 @@ import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
 import { Cache } from '../../../src/core/Cache';
 import { CacheError } from '../../../src/errors/CacheError';
-import { Serializer } from '../../../src/core/managers/Serializer';
 import { CacheItem, EventCallback, StorageAdapter } from '../../../src/types/CacheTypes';
 import { createStorageAdapter } from '../../../src/utils';
 
@@ -10,11 +9,10 @@ describe('Cache Class - Advanced Tests', () => {
   let cache: Cache<object, any>;
 
   beforeEach(() => {
-    const rawStorage = new WeakMap<object, CacheItem<string>>();
-    const storage = createStorageAdapter<object, CacheItem<string>>(rawStorage);
+    const rawStorage = new WeakMap<object, CacheItem<object, string>>();
+    const storage = createStorageAdapter<object, CacheItem<object, string>>(rawStorage);
     storage.clear!();
     cache = new Cache({
-      serializer: Serializer,
       storage,
       policy: 'LRU',
     });
@@ -45,10 +43,9 @@ describe('Cache Class - Advanced Tests', () => {
 
   describe('Set and Map Support', () => {
     it('should store and retrieve Map values', () => {
-      const rawStorage = new Map<object, string[]>();
-      const storage = createStorageAdapter<object, CacheItem<string>>(rawStorage);
+      const rawStorage = new Map<object, string[][]>();
+      const storage = createStorageAdapter<object, CacheItem<object, string[][]>>(rawStorage);
       const cache = new Cache({
-        serializer: Serializer,
         storage,
         policy: 'LRU',
       });
@@ -103,10 +100,9 @@ describe('Cache Class - Advanced Tests', () => {
     });
 
     it('should handle mixed key types in Map storage', () => {
-      const mapStorage = new Map<any, CacheItem<string>>();
-      const storage = createStorageAdapter<any, CacheItem<string>>(mapStorage);
+      const mapStorage = new Map<any, CacheItem<any, string>>();
+      const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
       const mixedCache = new Cache({
-        serializer: Serializer,
         storage,
         policy: 'LRU',
       });
@@ -122,10 +118,9 @@ describe('Cache Class - Advanced Tests', () => {
     });
 
     it('should handle simultaneous operations on large data sets', () => {
-      const mapStorage = new Map<any, CacheItem<string>>();
-      const storage = createStorageAdapter<any, CacheItem<string>>(mapStorage);
+      const mapStorage = new Map<any, CacheItem<any, number>>();
+      const storage = createStorageAdapter<any, CacheItem<any, number>>(mapStorage);
       const largeDataSet = new Cache({
-        serializer: Serializer,
         storage,
         policy: 'LRU',
       });
@@ -138,30 +133,12 @@ describe('Cache Class - Advanced Tests', () => {
       const keyToRetrieve = storedKeys.find((key) => key.id === 2);
       expect(largeDataSet.get(keyToRetrieve!)).to.equal(2);
     });
-
-    it('should throw when using invalid serializers', () => {
-      const invalidSerializer = {
-        serialize: () => null,
-        deserialize: () => null,
-      };
-      const map = new Map<any, CacheItem<string>>();
-      const storage = createStorageAdapter<any, CacheItem<string>>(map);
-
-      expect(
-        () =>
-          new Cache({
-            serializer: invalidSerializer as any,
-            storage,
-            policy: 'LRU',
-          }),
-      ).to.throw(CacheError, 'Invalid serializer: error during serialization/deserialization');
-    });
   });
   describe('Cache Dependency Management', () => {
     it('should delete dependent keys when the parent is deleted', () => {
-      const mapStorage = new Map<any, CacheItem<string>>();
-      const storage = createStorageAdapter<any, CacheItem<string>>(mapStorage);
-      const cache = new Cache<string, string>({ storage, serializer: Serializer, policy: 'LRU' });
+      const mapStorage = new Map<any, CacheItem<any, string>>();
+      const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
+      const cache = new Cache<string, string>({ storage, policy: 'LRU' });
       cache.set('parent', 'value1');
       cache.set('child1', 'value2', { dependsOn: 'parent' });
       cache.set('child2', 'value3', { dependsOn: 'parent' });
@@ -174,9 +151,9 @@ describe('Cache Class - Advanced Tests', () => {
     });
 
     it('should handle complex dependency chains', () => {
-      const mapStorage = new Map<any, CacheItem<string>>();
-      const storage = createStorageAdapter<any, CacheItem<string>>(mapStorage);
-      const cache = new Cache<string, string>({ storage, serializer: Serializer, policy: 'LRU' });
+      const mapStorage = new Map<any, CacheItem<any, string>>();
+      const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
+      const cache = new Cache<string, string>({ storage, policy: 'LRU' });
       cache.set('key1', 'value1');
       cache.set('key2', 'value2', { dependsOn: 'key1' });
       cache.set('key3', 'value3', { dependsOn: 'key2' });
@@ -189,17 +166,17 @@ describe('Cache Class - Advanced Tests', () => {
     });
 
     it('should throw an error if the parent key does not exist', () => {
-      const mapStorage = new Map<any, CacheItem<string>>();
-      const storage = createStorageAdapter<any, CacheItem<string>>(mapStorage);
-      const cache = new Cache<string, string>({ storage, serializer: Serializer, policy: 'LRU' });
+      const mapStorage = new Map<any, CacheItem<any, string>>();
+      const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
+      const cache = new Cache<string, string>({ storage, policy: 'LRU' });
 
       expect(() => cache.set('child', 'value', { dependsOn: 'nonexistent' })).to.throw(CacheError, 'Parent key "nonexistent" does not exist.');
     });
   });
   it('should trigger onExpire callback when the item expires', (done) => {
-    const mapStorage = new Map<any, CacheItem<string>>();
-    const storage = createStorageAdapter<any, CacheItem<string>>(mapStorage);
-    const cache = new Cache<string, string>({ storage, serializer: Serializer, policy: 'LRU' });
+    const mapStorage = new Map<any, CacheItem<any, string>>();
+    const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
+    const cache = new Cache<string, string>({ storage, policy: 'LRU' });
     const onExpireSpy = (key: string, value: string | null) => {
       expect(key).to.deep.equal('testKey');
       expect(value).to.deep.equal('testValue');
@@ -214,9 +191,9 @@ describe('Cache Class - Advanced Tests', () => {
   });
 
   it('should handle onExpire when multiple items expire simultaneously', (done) => {
-    const mapStorage = new Map<any, CacheItem<string>>();
-    const storage = createStorageAdapter<any, CacheItem<string>>(mapStorage);
-    const cache = new Cache<string, string>({ storage, serializer: Serializer, policy: 'LRU' });
+    const mapStorage = new Map<any, CacheItem<any, string>>();
+    const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
+    const cache = new Cache<string, string>({ storage, policy: 'LRU' });
     const onExpireSpy = (key: string, value: string | null) => {
       expect(['key1', 'key2']).to.include(key);
       expect(['value1', 'value2']).to.include(value);
@@ -233,9 +210,9 @@ describe('Cache Class - Advanced Tests', () => {
   });
 
   it('should work with dependent keys and trigger onExpire for all dependents', (done) => {
-    const mapStorage = new Map<any, CacheItem<string>>();
-    const storage = createStorageAdapter<any, CacheItem<string>>(mapStorage);
-    const cache = new Cache<string, string>({ storage, serializer: Serializer, policy: 'LRU' });
+    const mapStorage = new Map<any, CacheItem<any, string>>();
+    const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
+    const cache = new Cache<string, string>({ storage, policy: 'LRU' });
     const expiredKeys: string[] = [];
 
     const onExpireSpy = (key: string, value: string | null) => {
@@ -256,98 +233,16 @@ describe('Cache Class - Advanced Tests', () => {
       expect(cache.get('child2')).to.be.null;
     }, 100);
   });
-  describe('Cache - Observer Management', () => {
-    let storage: StorageAdapter<string, CacheItem<string>>;
-    let cache: Cache<string, string>;
-    const mapStorage = new Map<string, CacheItem<string>>();
-
-    beforeEach(() => {
-      storage = createStorageAdapter<string, CacheItem<string>>(mapStorage);
-      cache = new Cache<string, string>({
-        storage,
-        serializer: { serialize: JSON.stringify, deserialize: JSON.parse },
-        policy: 'LRU',
-      });
-      mapStorage.clear();
-    });
-
-    describe('observeKey', () => {
-      it('should register an observer for a given key', () => {
-        const key = 'user:1';
-        const callback: EventCallback<string, string> = (key, value) => {
-          expect(key).to.equal('user:1');
-          expect(value).to.equal('John Doe');
-        };
-        cache.set(key, 'John Doe');
-        cache.observeKey(key, callback);
-        cache.set(key, 'John Doe');
-      });
-
-      it('should trigger the observer when the key is updated', (done) => {
-        const key = 'user:1';
-        const callback: EventCallback<string, string> = (key, value) => {
-          expect(key).to.equal('user:1');
-          expect(value).to.equal('Jane Doe');
-          done();
-        };
-        cache.set(key, 'John Doe');
-        cache.observeKey(key, callback);
-        cache.set(key, 'Jane Doe');
-      });
-
-      it('should throw an error if the key does not exist when observing', () => {
-        const key = 'user:1';
-        const callback: EventCallback<string, string> = () => {};
-        expect(() => cache.observeKey(key, callback)).to.throw(CacheError, `Key "${key}" does not exist in the cache.`);
-      });
-
-      it('should throw an error if the observer is already registered for the key', () => {
-        const key = 'user:1';
-        const callback: EventCallback<string, string> = () => {};
-
-        cache.set(key, 'John Doe');
-
-        cache.observeKey(key, callback);
-
-        expect(() => cache.observeKey(key, callback)).to.throw(CacheError, `Observer already registered for key "${key}".`);
-      });
-    });
-
-    describe('unobserveKey', () => {
-      it('should unregister an observer for a given key', () => {
-        const key = 'user:1';
-        const callback: EventCallback<string, string> = () => {};
-
-        cache.set(key, 'John Doe');
-
-        cache.observeKey(key, callback);
-
-        cache.unobserveKey(key, callback);
-
-        expect(() => cache.set(key, 'Jane Doe')).to.not.throw();
-      });
-
-      it('should throw an error if the observer was not previously registered', () => {
-        const key = 'user:1';
-        const callback: EventCallback<string, string> = () => {};
-
-        cache.set(key, 'John Doe');
-
-        expect(() => cache.unobserveKey(key, callback)).to.throw(CacheError, `No observers found for key "${key}".`);
-      });
-    });
-  });
   describe('Cache - Pattern Matcher', () => {
-    let storage: StorageAdapter<string, CacheItem<string>>;
+    let storage: StorageAdapter<string, CacheItem<string, string>>;
     let cache: Cache<string, string>;
-    const mapStorage = new Map<string, CacheItem<string>>();
+    const mapStorage = new Map<string, CacheItem<string, string>>();
 
     beforeEach(() => {
-      storage = createStorageAdapter<string, CacheItem<string>>(mapStorage);
+      storage = createStorageAdapter<string, CacheItem<string, string>>(mapStorage);
       storage.clear!();
       cache = new Cache<string, string>({
         storage,
-        serializer: { serialize: JSON.stringify, deserialize: JSON.parse },
         policy: 'LRU',
       });
       mapStorage.clear();
@@ -395,16 +290,15 @@ describe('Cache Class - Advanced Tests', () => {
     });
   });
   describe('Cache - Swr Option', () => {
-    let storage: StorageAdapter<string, any>;
+    let storage: StorageAdapter<string, CacheItem<string, string>>;
     let cache: Cache<string, string>;
     const mapStorage = new Map<string, any>();
 
     beforeEach(() => {
-      storage = createStorageAdapter<string, any>(mapStorage);
+      storage = createStorageAdapter<string, CacheItem<string, any>>(mapStorage);
       storage.clear!();
       cache = new Cache<string, string>({
         storage,
-        serializer: { serialize: JSON.stringify, deserialize: JSON.parse },
         policy: 'LRU',
       });
       mapStorage.clear();
@@ -430,9 +324,7 @@ describe('Cache Class - Advanced Tests', () => {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       const result = await cache.get(key);
-      const clearValue = JSON.stringify(freshData);
-
-      expect(result).to.equal(clearValue);
+      expect(result).to.equal(freshData);
     });
 
     it('should return old data when SWR is already running', async function () {
@@ -452,7 +344,7 @@ describe('Cache Class - Advanced Tests', () => {
       expect(result1).to.equal(oldData);
       await new Promise((resolve) => setTimeout(resolve, 2000));
       const result2 = await cache.get(key);
-      expect(result2).to.equal(JSON.stringify(newData));
+      expect(result2).to.equal(newData);
     });
 
     it('should return data immediately if not stale and no revalidation needed', async () => {
@@ -497,7 +389,7 @@ describe('Cache Class - Advanced Tests', () => {
       });
 
       const result = await cache.get(key);
-      expect(result).to.equal(JSON.stringify(freshData));
+      expect(result).to.equal(freshData);
     });
 
     it('should trigger revalidation if lastFetched is too old', async function () {
@@ -516,7 +408,7 @@ describe('Cache Class - Advanced Tests', () => {
       });
       await new Promise((resolve) => setTimeout(resolve, 2000));
       const result = await cache.get(key);
-      expect(result).to.equal(JSON.stringify(freshData));
+      expect(result).to.equal(freshData);
     });
   });
   describe('Cache - Priority Option', () => {
@@ -529,14 +421,12 @@ describe('Cache Class - Advanced Tests', () => {
       cache = new Cache<string, string>({
         storage,
         maxSize: 3,
-        serializer: { serialize: JSON.stringify, deserialize: JSON.parse },
         policy: 'LRU',
       });
       cache.clear();
     });
 
     it('should evict the least recently used item when the cache is full (LRU)', () => {
-      // Insert items with different priorities
       cache.set('a', 'value1', { priority: 2 });
       cache.set('b', 'value2', { priority: 1 });
       cache.set('c', 'value3', { priority: 3 });
@@ -554,12 +444,10 @@ describe('Cache Class - Advanced Tests', () => {
         done();
       };
 
-      // Insert item with a TTL and an onExpire callback
       cache.set('a', 'value1', { ttl: 100, onExpire });
 
-      // Wait for expiration
       setTimeout(() => {
-        cache.get('a'); // Should trigger expiration
+        cache.get('a');
       }, 150);
     });
     it('should handle multiple items with the same priority', () => {
@@ -572,15 +460,12 @@ describe('Cache Class - Advanced Tests', () => {
     });
 
     it('should evict items based on priority when multiple items have the same frequency', () => {
-      // Insert items with the same frequency but different priorities
       cache.set('a', 'value1', { priority: 1 });
       cache.set('b', 'value2', { priority: 3 });
       cache.set('c', 'value3', { priority: 2 });
 
-      // Insert another item, should evict the least frequent and lowest priority item
       cache.set('d', 'value4', { priority: 2 });
 
-      // 'a' should be evicted because it has the lowest priority
       expect(cache.has('a')).to.be.false;
       expect(cache.has('b')).to.be.true;
       expect(cache.has('d')).to.be.true;

@@ -2,11 +2,7 @@ import { Qiks } from '../../dist';
 
 const cache = new Qiks<string, any>({
   maxSize: 3,
-  policy: 'LRU', // Least Recently Used policy
-  serializer: {
-    serialize: JSON.stringify,
-    deserialize: JSON.parse,
-  },
+  policy: 'LRU',
 });
 
 // Set up event listeners for cache operations
