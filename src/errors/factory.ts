@@ -54,4 +54,24 @@ export class CacheExceptionFactory {
     const message = 'An unexpected error occurred';
     return new CacheExceptionBuilder(CacheErrorCodes.INVALID_KEY_FORMAT, message).withCause(cause);
   }
+  static fileNotFound(filePath: string) {
+    return new CacheException(`File not found: ${filePath}`, {
+      code: CacheErrorCodes.FILE_NOT_FOUND,
+      metadata: { filePath },
+    });
+  }
+
+  static jsonParseError(errorMessage: string) {
+    return new CacheException(`JSON Parse Error: ${errorMessage}`, {
+      code: CacheErrorCodes.JSON_PARSE_ERROR,
+      metadata: { errorMessage },
+    });
+  }
+
+  static fileWriteError(filePath: string, errorMessage: string) {
+    return new CacheException(`Error writing to file ${filePath}: ${errorMessage}`, {
+      code: CacheErrorCodes.FILE_WRITE_ERROR,
+      metadata: { filePath, errorMessage },
+    });
+  }
 }

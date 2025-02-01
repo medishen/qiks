@@ -16,8 +16,9 @@ export interface CacheErrorMetadata {
   [CacheErrorCodes.INVALID_OPERATION]: { operation?: string } & Record<string, unknown>;
   [CacheErrorCodes.TIMEOUT]: { timeout?: number } & Record<string, unknown>;
   [CacheErrorCodes.UNAUTHORIZED_ACCESS]: { user?: string } & Record<string, unknown>;
-  [CacheErrorCodes.CACHE_LOCKED]: { lockId?: string } & Record<string, unknown>;
-  [CacheErrorCodes.RATE_LIMIT_EXCEEDED]: { limit?: number; interval?: number } & Record<string, unknown>;
+  [CacheErrorCodes.FILE_NOT_FOUND]: { filePath: string } & Record<string, unknown>;
+  [CacheErrorCodes.JSON_PARSE_ERROR]: { errorMessage: string } & Record<string, unknown>;
+  [CacheErrorCodes.FILE_WRITE_ERROR]: { filePath: string; errorMessage: string } & Record<string, unknown>;
 }
 
 export interface CacheErrorOptions<TCode extends CacheErrorCodes> {
