@@ -5,13 +5,12 @@
 
 import { CacheException } from './cache-exception';
 import { CacheErrorCodes } from '../common';
+import { CacheExceptionBuilder } from './builder';
 
 export class CacheExceptionFactory {
   static missingKey<K>(key: K) {
-    return new CacheException(`Cache key '${key}' not found`, {
-      code: CacheErrorCodes.MISSING_KEY,
-      metadata: { key },
-    });
+    const message = `Cache key not found: ${String(key)}`;
+    return new CacheExceptionBuilder(CacheErrorCodes.MISSING_KEY, message).withMetadata({ key });
   }
 
   static invalidTTL(ttl: number) {
@@ -22,60 +21,37 @@ export class CacheExceptionFactory {
   }
 
   static storageFull(maxSize: number) {
-    return new CacheException(`Cache storage full (max ${maxSize} items)`, {
-      code: CacheErrorCodes.STORAGE_FULL,
-      metadata: { maxSize },
-    });
+    const message = `Cache storage full (max ${maxSize} items)`;
+    return new CacheExceptionBuilder(CacheErrorCodes.STORAGE_FULL, message).withMetadata({ maxSize });
   }
 
   static serializationFailed() {
-    return new CacheException('Serialization of cache value failed', {
-      code: CacheErrorCodes.SERIALIZATION_FAILED,
-    });
+    const message = 'Serialization of cache value failed';
+    return new CacheExceptionBuilder(CacheErrorCodes.SERIALIZATION_FAILED, message);
   }
 
   static deserializationFailed() {
-    return new CacheException('Deserialization of cache value failed', {
-      code: CacheErrorCodes.DESERIALIZATION_FAILED,
-    });
+    const message = 'Deserialization of cache value failed';
+    return new CacheExceptionBuilder(CacheErrorCodes.DESERIALIZATION_FAILED, message);
   }
 
   static concurrencyConflict<K>(key: K) {
-    return new CacheException(`Concurrency conflict while accessing cache key '${key}'`, {
-      code: CacheErrorCodes.CONCURRENCY_CONFLICT,
-      metadata: { key },
-    });
+    const message = `Concurrency conflict while accessing cache key '${key}'`;
+    return new CacheExceptionBuilder(CacheErrorCodes.CONCURRENCY_CONFLICT, message).withMetadata({ key });
   }
 
   static cacheOverflow() {
-    return new CacheException('Cache overflow error: Maximum cache size exceeded', {
-      code: CacheErrorCodes.CACHE_OVERFLOW,
-    });
+    const message = 'Cache overflow error: Maximum cache size exceeded';
+    return new CacheExceptionBuilder(CacheErrorCodes.CACHE_OVERFLOW, message);
   }
 
   static invalidKeyFormat<K>(key: K) {
-    return new CacheException(`Invalid cache key format: '${key}'`, {
-      code: CacheErrorCodes.INVALID_KEY_FORMAT,
-      metadata: { key },
-    });
+    const message = `Invalid cache key format: '${key}'`;
+    return new CacheExceptionBuilder(CacheErrorCodes.INVALID_KEY_FORMAT, message).withMetadata({ key });
   }
 
   static unexpectedError(cause: string) {
-    return new CacheException('An unexpected error occurred', {
-      code: CacheErrorCodes.UNEXPECTED_ERROR,
-      cause,
-    });
-  }
-
-  static rateLimitExceeded() {
-    return new CacheException('Rate limit exceeded for cache operations', {
-      code: CacheErrorCodes.RATE_LIMIT_EXCEEDED,
-    });
-  }
-
-  static cacheLocked() {
-    return new CacheException('Cache is locked due to ongoing operation', {
-      code: CacheErrorCodes.CACHE_LOCKED,
-    });
+    const message = 'An unexpected error occurred';
+    return new CacheExceptionBuilder(CacheErrorCodes.INVALID_KEY_FORMAT, message).withCause(cause);
   }
 }
