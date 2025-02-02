@@ -17,6 +17,7 @@ export enum CacheErrorCodes {
   INVALID_OPERATION = 'INVALID_OPERATION', // Invalid cache operation (e.g., illegal state)
   TIMEOUT = 'TIMEOUT', // Operation timed out
   UNAUTHORIZED_ACCESS = 'UNAUTHORIZED_ACCESS', // Unauthorized access to cache
-  CACHE_LOCKED = 'CACHE_LOCKED', // Cache is locked due to ongoing operation
-  RATE_LIMIT_EXCEEDED = 'RATE_LIMIT_EXCEEDED', // Rate limit exceeded for cache operations
+  FILE_NOT_FOUND = 'FILE_NOT_FOUND',
+  JSON_PARSE_ERROR = 'JSON_PARSE_ERROR',
+  FILE_WRITE_ERROR = 'FILE_WRITE_ERROR',
 }
