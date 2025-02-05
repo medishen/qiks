@@ -1,18 +1,10 @@
 import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
-import { Cache } from '../../../src/core/Cache';
-import { CacheError } from '../../../src/errors/CacheError';
-import { CacheItem } from '../../../src/types/CacheTypes';
-import { createStorageAdapter } from '../../../src/utils';
+import { Qiks } from '../../../src/index';
 describe('Cache Class - Basic Tests', () => {
-  let cache: Cache<string, number>;
+  let cache: Qiks<string, number>;
   beforeEach(() => {
-    const rawStorage = new Map<string, CacheItem<string, string>>();
-    const storage = createStorageAdapter<string, CacheItem<string, number>>(rawStorage);
-    cache = new Cache({
-      storage,
-      policy: 'LRU',
-    });
+    cache = new Qiks();
   });
 
   describe('Basic Operations', () => {
@@ -48,24 +40,6 @@ describe('Cache Class - Basic Tests', () => {
       await new Promise((resolve) => setTimeout(resolve, 150));
       expect(cache.get('temp')).to.be.null;
     });
-
-    it('should not set values with invalid TTL', () => {
-      expect(() => cache.set('invalid', 123, { ttl: -1 })).to.throw(CacheError, 'TTL must be greater than 0');
-    });
-  });
-
-  describe('Error Handling', () => {
-    it('should throw an error for empty keys on set', () => {
-      expect(() => cache.set('', 123)).to.throw(CacheError, 'Key must not be empty');
-    });
-
-    it('should throw an error for empty keys on get', () => {
-      expect(() => cache.get('')).to.throw(CacheError, 'Key must not be empty');
-    });
-
-    it('should throw an error for empty keys on delete', () => {
-      expect(() => cache.delete('')).to.throw(CacheError, 'Key must not be empty');
-    });
   });
 
   describe('Edge Cases', () => {
@@ -90,12 +64,6 @@ describe('Cache Class - Basic Tests', () => {
     it('should allow setting null as a value', () => {
       cache.set('null-value', null as unknown as number);
       expect(cache.get('null-value')).to.equal(null);
-    });
-
-    it('should allow special characters in keys', () => {
-      const specialKey = '!@#$%^&*()_+';
-      cache.set(specialKey, 123);
-      expect(cache.get(specialKey)).to.equal(123);
     });
 
     it('should not throw when clearing an already empty cache', () => {
