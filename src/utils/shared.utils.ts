@@ -1,7 +1,3 @@
-import { CacheStorageAdapter } from '../common';
-import { DependencyManager } from '../managers/dependency.manager';
-import { EvictionPolicy } from '../../dist/types/EvictionPolicy';
-
 export const isUndefined = (obj: any): obj is undefined => typeof obj === 'undefined';
 export const isNull = (val: any): val is null | undefined => isUndefined(val) || val === null;
 export const isEmpty = (array: any): boolean => !(array && array.length > 0);
