@@ -1,34 +1,38 @@
 import { expect } from 'chai';
 import { SinonSandbox, createSandbox } from 'sinon';
-import { MockStorageAdapter } from '../../mocks/storage-mock';
-import { FunctionalMethods } from '../../../src/tools/functional-methods';
-import { CacheExceptionFactory } from '../../../src/errors';
+import { Functional } from '../../../src/tools/functional-methods';
+import { CacheStorageAdapter } from '../../../src/common';
+import { MapStorageAdapter } from '../../../src/storage';
 describe('FunctionalMethods', function () {
   let sandbox: SinonSandbox;
-  let mockAdapter: MockStorageAdapter<string, number>;
-  let functionalMethods: FunctionalMethods<string, number>;
+  let adapter: CacheStorageAdapter<string, number>;
+  let functionalMethods: Functional<string, number>;
 
   beforeEach(() => {
     sandbox = createSandbox();
 
-    mockAdapter = new MockStorageAdapter<string, number>();
-    functionalMethods = new FunctionalMethods(mockAdapter);
+    adapter = new MapStorageAdapter();
+    functionalMethods = new Functional(adapter);
   });
 
   afterEach(function () {
+    adapter.clear();
     sandbox.restore();
   });
   // Helper function to setup mock data
   const setMockData = (data: { [key: string]: number }) => {
     Object.keys(data).forEach((key) => {
-      mockAdapter.set(key, data[key]);
+      adapter.set(key, { value: data[key] });
     });
   };
 
   describe('#every', function () {
     it('should return true when all values satisfy the condition', () => {
       setMockData({ a: 1, b: 2, c: 3 });
-      const result = functionalMethods.every((value) => value > 0);
+      const result = functionalMethods.every((value) => {
+        return value > 0;
+      });
+
       expect(result).to.be.true;
     });
 
@@ -118,21 +122,23 @@ describe('FunctionalMethods', function () {
   describe('#merge', function () {
     it('should merge another StorageAdapter into the current one', function () {
       setMockData({ a: 1 });
-      const otherAdapter = new MockStorageAdapter<string, number>();
+      const otherAdapter = new MapStorageAdapter<string, number>();
       otherAdapter.set('b', 2);
       functionalMethods.merge(otherAdapter);
-      expect(mockAdapter.get('a')).to.equal(1);
-      expect(mockAdapter.get('b')).to.equal(2);
+
+      expect(adapter.get('a')).to.deep.equal({ value: 1 });
+      expect(adapter.get('b')).to.deep.equal({ value: 2 });
     });
   });
 
   describe('#toArray', function () {
     it('should return an array of entries', function () {
       setMockData({ a: 1, b: 2 });
-      const result = functionalMethods.toArray({ keys: true, values: true, entries: true });
+      const result = functionalMethods.toArray();
+
       expect(result).to.deep.equal([
-        ['a', 1],
-        ['b', 2],
+        ['a', { value: 1 }],
+        ['b', { value: 2 }],
       ]);
     });
   });
@@ -141,11 +147,13 @@ describe('FunctionalMethods', function () {
     it('should return the maximum value based on the comparator', function () {
       setMockData({ a: 1, b: 3, c: 2 });
       const result = functionalMethods.max((a, b) => a - b);
-      expect(result).to.equal(3);
+
+      expect(result).to.deep.equal({ value: 3 });
     });
 
     it('should return undefined if the adapter is empty', function () {
       const result = functionalMethods.max((a, b) => a - b);
+
       expect(result).to.equal(undefined);
     });
   });
@@ -154,7 +162,8 @@ describe('FunctionalMethods', function () {
     it('should return the minimum value based on the comparator', function () {
       setMockData({ a: 1, b: 3, c: 2 });
       const result = functionalMethods.min((a, b) => a - b);
-      expect(result).to.equal(1);
+
+      expect(result).to.deep.equal({ value: 1 });
     });
 
     it('should return undefined if the adapter is empty', function () {
@@ -167,12 +176,13 @@ describe('FunctionalMethods', function () {
     it('should calculate the average value', function () {
       setMockData({ a: 1, b: 2, c: 3 });
       const result = functionalMethods.average((value) => value);
-      expect(result).to.equal(2);
+      expect(result).to.deep.equal(2);
     });
 
     it('should return 0 if there are no elements', function () {
       const result = functionalMethods.average((value) => value);
-      expect(result).to.equal(0);
+
+      expect(result).to.deep.equal(0);
     });
   });
 

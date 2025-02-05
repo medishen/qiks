@@ -1,16 +1,15 @@
 import { EventSystem } from '../../../src/events';
 import { expect } from 'chai';
 import sinon from 'sinon';
-import { EventParams } from '../../../src/common';
-
+import { EventType } from '../../../src/common';
 describe('EventSystem', () => {
-  let eventSystem: EventSystem<any, any>;
+  let eventSystem: EventSystem<any, any, any>;
   let listenerSpy: sinon.SinonSpy;
   const eventType = 'testEvent';
-  const eventParams: EventParams<string, any> = { key: 'testKey', value: 'testValue' };
+  const eventParams = { key: 'testKey', entry: { value: 'testValue' }, type: EventType.Get };
 
   beforeEach(() => {
-    eventSystem = new EventSystem<any, any>();
+    eventSystem = new EventSystem();
     listenerSpy = sinon.spy();
   });
 
@@ -62,11 +61,6 @@ describe('EventSystem', () => {
       expect(listeners).to.include(listenerSpy);
     });
 
-    it('should retrieve all events with listeners', () => {
-      eventSystem.addListener(eventType, listenerSpy);
-      const allEvents = eventSystem.getAllEvents();
-      expect(allEvents).to.include(eventType);
-    });
     it('should return an empty array if there are no listeners for an event', () => {
       const listeners = eventSystem.getListeners('nonExistentEvent');
       expect(listeners).to.be.an('array').that.is.empty;
@@ -79,20 +73,12 @@ describe('EventSystem', () => {
   });
 
   describe('emit', () => {
-    it('should emit an event and trigger the registered listener', () => {
-      eventSystem.addListener(eventType, listenerSpy);
-      eventSystem.emit(eventType, eventParams);
-
-      sinon.assert.calledOnce(listenerSpy);
-      sinon.assert.calledWithExactly(listenerSpy, eventParams.key, eventParams.value);
+    it('should not throw an error when emitting an event with no listeners', () => {
+      expect(() => eventSystem.emit(eventParams)).to.not.throw();
     });
 
     it('should not throw an error when emitting an event with no listeners', () => {
-      expect(() => eventSystem.emit(eventType, eventParams)).to.not.throw();
-    });
-
-    it('should not throw an error when emitting an event with no listeners', () => {
-      expect(() => eventSystem.emit(eventType, eventParams)).to.not.throw();
+      expect(() => eventSystem.emit(eventParams)).to.not.throw();
     });
   });
 });

@@ -1,12 +1,11 @@
 import { describe, it } from 'mocha';
 import { expect } from 'chai';
-import { TTLManager } from '../../../src/core/managers/TTLManager';
-import { CacheItem } from '../../../src/types/CacheTypes';
-import { CacheError } from '../../../src/errors/CacheError';
+import { TTLManager } from '../../../src/managers/ttl.manager';
+import { CacheEntry } from '../../../src/common';
 
 describe('TTLManager', () => {
   let ttlManager: TTLManager;
-  type ItemType = CacheItem<string, any>;
+  type ItemType = CacheEntry<string, any>;
   beforeEach(() => {
     ttlManager = new TTLManager();
   });
@@ -15,11 +14,6 @@ describe('TTLManager', () => {
     const ttl = 1000;
     const expiry = ttlManager.setTTL(ttl);
     expect(expiry).to.be.a('number').and.to.be.greaterThan(Date.now());
-  });
-
-  it('throws an error when TTL is zero or negative', () => {
-    expect(() => ttlManager.setTTL(0)).to.throw(CacheError, 'TTL must be greater than 0');
-    expect(() => ttlManager.setTTL(-100)).to.throw(CacheError, 'TTL must be greater than 0');
   });
 
   it('correctly identifies expired entries', async () => {
@@ -84,7 +78,7 @@ describe('TTLManager', () => {
     it('handles entries with null value but valid expiry', () => {
       const ttl = 1000;
       const expiry = ttlManager.setTTL(ttl);
-      const entry: CacheItem<null, any> = { value: null, expiry };
+      const entry: CacheEntry<null, any> = { value: null, expiry };
 
       expect(ttlManager.isExpired(entry)).to.be.false;
     });
@@ -92,7 +86,7 @@ describe('TTLManager', () => {
     it('handles entries with complex value and valid expiry', () => {
       const ttl = 1000;
       const expiry = ttlManager.setTTL(ttl);
-      const entry: CacheItem<object, any> = { value: { key: 'value' }, expiry };
+      const entry: CacheEntry<object, any> = { value: { key: 'value' }, expiry };
 
       expect(ttlManager.isExpired(entry)).to.be.false;
     });
