@@ -1,7 +1,8 @@
+import { CacheErrorCodes } from '../common';
 import { CacheExceptionFactory } from '../errors';
 import { Serialization } from './serialization';
 
-export class FileOperations<K, V> {
+export class FileOps<K, V> {
   constructor(private serialization: Serialization<K, V>) {}
 
   async import(filePath: string): Promise<void> {
@@ -10,13 +11,18 @@ export class FileOperations<K, V> {
       const content = await fs.readFile(filePath, 'utf-8');
       this.serialization.fromJSON(content);
     } catch (error: any) {
+      // Handle file not found error (ENOENT)
       if (error.code === 'ENOENT') {
-        throw CacheExceptionFactory.fileNotFound(filePath); // File not found error
+        throw CacheExceptionFactory.createException(CacheErrorCodes.FILE_NOT_FOUND, `File not found: ${filePath}`, { filePath });
       }
+
+      // Handle syntax errors during JSON parsing
       if (error instanceof SyntaxError) {
-        throw CacheExceptionFactory.jsonParseError(error.message); // JSON parse error
+        throw CacheExceptionFactory.createException(CacheErrorCodes.JSON_PARSE_ERROR, `Syntax error while parsing JSON from file: ${filePath}`, { filePath, errorMessage: error.message });
       }
-      throw CacheExceptionFactory.unexpectedError(error.message); // Unexpected error
+
+      // Handle unexpected errors
+      throw CacheExceptionFactory.createException(CacheErrorCodes.UNEXPECTED_ERROR, `Unexpected error during file import: ${error.message}`, { filePath, errorMessage: error.message });
     }
   }
 
@@ -27,7 +33,7 @@ export class FileOperations<K, V> {
       try {
         await fs.writeFile(filePath, json);
       } catch (error: any) {
-        throw CacheExceptionFactory.fileWriteError(filePath, error.message); // File write error
+        throw CacheExceptionFactory.createException(CacheErrorCodes.FILE_WRITE_ERROR, `Error writing to file ${filePath}`, { filePath, errorMessage: error.message });
       }
     }
     return json;
