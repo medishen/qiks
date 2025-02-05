@@ -1,5 +1,9 @@
-export type EventParams<K, V> = {
-  key: K;
-  value: V;
-};
-export type EventCallback<K, V> = (key: K, value?: V) => void;
+import { EventType } from '../../enums';
+import { EventPlayLoads } from '../../interfaces';
+
+export type EventParams<E extends EventType, K, V> = {
+  [T in E]: { type: T } & EventPlayLoads<K, V>[T];
+}[E];
+
+// interfaces.ts
+export type EventCallback<E extends EventType, K, V> = (params: EventParams<E, K, V>) => void | Promise<void>;
