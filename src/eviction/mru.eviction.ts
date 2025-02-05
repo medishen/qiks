@@ -1,58 +1,105 @@
-import { ExecutionMode, isEmpty, ReturnTypeForMode } from '../common';
-import { EvictionStrategy, StorageAdapter } from '../common/interfaces';
+import { CacheStorageAdapter } from '../common';
+import { CacheEntry,  EvictionStrategy } from '../common/interfaces';
+import { isEmpty } from '../utils';
+
 /**
- * Represents a single cache entry in the MRU policy.
+ * Most Recently Used (MRU) Eviction Policy Implementation
+ * This class evicts the most recently used cache entry first
+ * It relies on the storage adapter preserving insertion order
  */
-interface MRUCacheEntry<V> {
-  value: V; // Cached value
-}
+export class MRUEvictionPolicy<K, V> implements EvictionStrategy<K, V> {
+  private accessOrder: K[] = [];
+  constructor(
+    public storage: CacheStorageAdapter<K, V>,
+    private options: {
+      capacity: number;
+    },
+  ) {}
 
-export class MRUEvictionPolicy<M extends ExecutionMode, K, V> implements EvictionStrategy<M, K, V> {
-  constructor(private mainStorage: StorageAdapter<M, K, MRUCacheEntry<V>>) {}
-  recordAccess(key: K): ReturnTypeForMode<M, void> {
-    const maybeEntry = this.mainStorage.get(key)!;
-    if (maybeEntry instanceof Promise) {
-      return maybeEntry.then((entry) => {
-        if (!entry) return;
-        this.mainStorage.delete(key);
-        return this.mainStorage.set(key, { value: entry.value });
-      }) as ReturnTypeForMode<M, void>;
-    }
-    if (!maybeEntry) return undefined as ReturnTypeForMode<M, void>;
-    this.mainStorage.delete(key);
-    return this.mainStorage.set(key, { value: maybeEntry.value });
-  }
+  /**
+   * Records access to a key by removing it and re-inserting it
+   * This marks the key as most recently used by moving it to the end of the order
+   */
+  recordAccess(key: K): void {
+    const entry = this.storage.get(key)!;
+    if (!entry) return;
 
-  recordInsertion(key: K, value: V): ReturnTypeForMode<M, void> {
-    const newEntry: MRUCacheEntry<V> = {
-      value,
-    };
-    return this.mainStorage.set(key, newEntry);
-  }
+    entry.lastAccessTime = Date.now();
+    entry.lastUpdated = entry.lastAccessTime;
 
-  recordRemoval(key: K): ReturnTypeForMode<M, void> {
-    return this.mainStorage.delete(key);
+    this.accessOrder = this.accessOrder.filter((k) => k !== key);
+    this.accessOrder.push(key);
   }
 
   /**
-   * Evicts the most recently used (MRU) cache entry.
+   * Inserts a new cache entry, marking it as most recently used.
+   * If the cache is full, it evicts the most recently used entry.
+   * @param key - The key of the new cache entry.
+   * @param value - The value of the new cache entry.
    */
-  evict(): ReturnTypeForMode<M, K | null> {
-    const maybeKeys = this.mainStorage.keys();
-
-    if (maybeKeys instanceof Promise) {
-      return maybeKeys.then((keys) => {
-        const lastKey = Array.from(keys).pop() ?? null;
-        if (lastKey !== null) this.mainStorage.delete(lastKey);
-        return lastKey;
-      }) as ReturnTypeForMode<M, K | null>;
+  recordInsertion(key: K, entry: CacheEntry<K, V>): void {
+    if (this.isFull()) {
+      this.evict();
     }
-
-    const lastKey = Array.from(maybeKeys).pop() ?? null;
-    if (lastKey !== null) this.mainStorage.delete(lastKey);
-    return lastKey as ReturnTypeForMode<M, K | null>;
+    this.storage.set(key, entry);
+    this.accessOrder.push(key);
   }
-  reset(): ReturnTypeForMode<M, void> {
-    return this.mainStorage.clear();
+
+  /**
+   * Removes a specific cache entry.
+   * This will also remove the key from the access order list.
+   * @param key - The key to remove from the cache.
+   */
+  recordRemoval(key: K): void {
+    this.storage.delete(key);
+    this.accessOrder = this.accessOrder.filter((k) => k !== key);
+  }
+
+  /**
+   * Evicts the most recently used cache entry.
+   * This removes the last item from the accessOrder array and deletes the entry from storage.
+   * @returns The key that was evicted, or null if there were no items to evict.
+   */
+  evict(): K | null {
+    const mostRecentKey = this.accessOrder.pop();
+    if (isEmpty(mostRecentKey)) return null;
+    this.storage.delete(mostRecentKey!);
+    return mostRecentKey || null;
+  }
+
+  /**
+   * Resets the eviction policy by clearing the main storage and access order.
+   */
+  reset(): void {
+    this.storage.clear();
+    this.accessOrder = [];
+  }
+
+  /**
+   * Retrieves cache usage statistics, including the most recently accessed key.
+   * @returns An object containing usage statistics.
+   */
+  getUsageStats(): Record<string, any> {
+    return {
+      mostRecentlyAccessedKey: this.accessOrder[this.accessOrder.length - 1],
+      currentSize: this.storage.size(),
+      capacity: this.options.capacity,
+    };
+  }
+
+  /**
+   * Retrieves all keys in the cache, based on the eviction policy's access order.
+   * @returns An array of keys currently in the cache.
+   */
+  getKeys(): K[] {
+    return Array.from(this.storage.keys());
+  }
+
+  /**
+   * Checks if the cache has reached its maximum capacity.
+   * @returns True if the cache is full, otherwise false.
+   */
+  isFull(): boolean {
+    return this.storage.size() >= this.options.capacity;
   }
 }
