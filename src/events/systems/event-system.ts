@@ -6,13 +6,13 @@ import { EventRegistry } from './event-registry';
  * The EventSystem class integrates the EventRegistry and EventManager.
  * It provides a unified interface to register events, add listeners, and emit events.
  */
-export class EventSystem<K extends EventType, V> {
-  private _registry: EventRegistry<K, V>;
-  private _emitter: EventEmitter<K, V>;
+export class EventSystem<E extends EventType, K, V> {
+  private _registry: EventRegistry<E, K, V>;
+  private _emitter: EventEmitter<E, K, V>;
 
   constructor() {
-    this._registry = new EventRegistry<K, V>();
-    this._emitter = new EventEmitter<K, V>(this._registry);
+    this._registry = new EventRegistry<E, K, V>();
+    this._emitter = new EventEmitter<E, K, V>(this._registry);
   }
 
   /**
@@ -20,7 +20,7 @@ export class EventSystem<K extends EventType, V> {
    * @param event - The event type to listen to.
    * @param listener - The callback function to be invoked when the event occurs.
    */
-  addListener<T extends K>(event: T, listener: EventCallback<K, V>): void {
+  addListener<T extends E>(event: T, listener: EventCallback<T, K, V>): void {
     this._registry.addListener(event, listener);
   }
 
@@ -29,7 +29,7 @@ export class EventSystem<K extends EventType, V> {
    * @param event - The event type from which to remove the listener.
    * @param listener - The callback function to be removed.
    */
-  removeListener<T extends K>(event: T, listener: EventCallback<K, V>): void {
+  removeListener<T extends E>(event: T, listener: EventCallback<T, K, V>): void {
     this._registry.removeListener(event, listener);
   }
 
@@ -38,7 +38,7 @@ export class EventSystem<K extends EventType, V> {
    * @param event - The event type for which to retrieve listeners.
    * @returns An array of listeners for the event, or an empty array if no listeners are found.
    */
-  getListeners<T extends K>(event: T): EventCallback<K, V>[] {
+  getListeners<T extends E>(event: T): EventCallback<T, K, V>[] {
     return this._registry.getListeners(event);
   }
 
@@ -55,7 +55,7 @@ export class EventSystem<K extends EventType, V> {
    * @param event - The event type to emit.
    * @param params - The parameters to pass to the event listeners.
    */
-  emit(event: K, params: EventParams<K, V>): void {
-    this._emitter.emit(event, params);
+  emit(params: EventParams<E, K, V>): void {
+    this._emitter.emit(params.type, params);
   }
 }

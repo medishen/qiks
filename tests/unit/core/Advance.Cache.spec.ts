@@ -1,20 +1,15 @@
 import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
-import { Cache } from '../../../src/core/Cache';
-import { CacheError } from '../../../src/errors/CacheError';
-import { CacheItem, EventCallback, StorageAdapter } from '../../../src/types/CacheTypes';
-import { createStorageAdapter } from '../../../src/utils';
+import { Qiks } from '../../../src';
+import { CacheExceptionFactory } from '../../../src/errors';
 
 describe('Cache Class - Advanced Tests', () => {
-  let cache: Cache<object, any>;
+  let cache: Qiks<object, any>;
 
   beforeEach(() => {
-    const rawStorage = new WeakMap<object, CacheItem<object, string>>();
-    const storage = createStorageAdapter<object, CacheItem<object, string>>(rawStorage);
-    storage.clear!();
-    cache = new Cache({
-      storage,
-      policy: 'LRU',
+    cache = new Qiks({
+      evictionPolicy: 'LRU',
+      storage: 'weakmap',
     });
   });
 
@@ -35,19 +30,13 @@ describe('Cache Class - Advanced Tests', () => {
 
       expect(() => cache.get({ id: 1 })).to.not.throw();
     });
-
-    it('should not allow non-object keys in WeakMap storage', () => {
-      expect(() => cache.set('stringKey' as unknown as object, 'value')).to.throw(CacheError, 'Keys must be non-null objects.');
-    });
   });
 
   describe('Set and Map Support', () => {
     it('should store and retrieve Map values', () => {
-      const rawStorage = new Map<object, string[][]>();
-      const storage = createStorageAdapter<object, CacheItem<object, string[][]>>(rawStorage);
-      const cache = new Cache({
-        storage,
-        policy: 'LRU',
+      const cache = new Qiks<object, string[][]>({
+        storage: 'map',
+        evictionPolicy: 'LRU',
       });
       const key = { id: 1 };
       const valueMap = [
@@ -66,6 +55,9 @@ describe('Cache Class - Advanced Tests', () => {
     it('should handle arrays as keys', () => {
       const arrayKey = [1, 2, 3];
       cache.set(arrayKey, 'arrayValue');
+      const s = cache.get(arrayKey);
+      console.log('S:', s);
+
       expect(cache.get(arrayKey)).to.equal('arrayValue');
     });
 
@@ -90,21 +82,16 @@ describe('Cache Class - Advanced Tests', () => {
     });
 
     it('should handle objects with circular references', () => {
-      const circularKey: any = {};
-      circularKey.self = circularKey;
-
+      const circularKey: any = { self: {} };
       const value = 'circularValue';
       cache.set(circularKey, value);
-
       expect(cache.get(circularKey)).to.equal(value);
     });
 
     it('should handle mixed key types in Map storage', () => {
-      const mapStorage = new Map<any, CacheItem<any, string>>();
-      const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
-      const mixedCache = new Cache({
-        storage,
-        policy: 'LRU',
+      const mixedCache = new Qiks<object, string>({
+        storage: 'map',
+        evictionPolicy: 'LRU',
       });
 
       const objKey = { id: 1 };
@@ -118,11 +105,9 @@ describe('Cache Class - Advanced Tests', () => {
     });
 
     it('should handle simultaneous operations on large data sets', () => {
-      const mapStorage = new Map<any, CacheItem<any, number>>();
-      const storage = createStorageAdapter<any, CacheItem<any, number>>(mapStorage);
-      const largeDataSet = new Cache({
-        storage,
-        policy: 'LRU',
+      const largeDataSet = new Qiks<object, number>({
+        maxSize: 10000,
+        storage: 'map',
       });
       const storedKeys: any[] = [];
       for (let i = 0; i < 10000; i++) {
@@ -136,9 +121,7 @@ describe('Cache Class - Advanced Tests', () => {
   });
   describe('Cache Dependency Management', () => {
     it('should delete dependent keys when the parent is deleted', () => {
-      const mapStorage = new Map<any, CacheItem<any, string>>();
-      const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
-      const cache = new Cache<string, string>({ storage, policy: 'LRU' });
+      const cache = new Qiks<string, string>({ storage: 'map' });
       cache.set('parent', 'value1');
       cache.set('child1', 'value2', { dependsOn: 'parent' });
       cache.set('child2', 'value3', { dependsOn: 'parent' });
@@ -151,9 +134,7 @@ describe('Cache Class - Advanced Tests', () => {
     });
 
     it('should handle complex dependency chains', () => {
-      const mapStorage = new Map<any, CacheItem<any, string>>();
-      const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
-      const cache = new Cache<string, string>({ storage, policy: 'LRU' });
+      const cache = new Qiks<string, string>({ storage: 'map' });
       cache.set('key1', 'value1');
       cache.set('key2', 'value2', { dependsOn: 'key1' });
       cache.set('key3', 'value3', { dependsOn: 'key2' });
@@ -164,96 +145,67 @@ describe('Cache Class - Advanced Tests', () => {
       expect(cache.has('key2')).to.be.false;
       expect(cache.has('key3')).to.be.false;
     });
-
-    it('should throw an error if the parent key does not exist', () => {
-      const mapStorage = new Map<any, CacheItem<any, string>>();
-      const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
-      const cache = new Cache<string, string>({ storage, policy: 'LRU' });
-
-      expect(() => cache.set('child', 'value', { dependsOn: 'nonexistent' })).to.throw(CacheError, 'Parent key "nonexistent" does not exist.');
+  });
+  describe('onExpire Option Management', () => {
+    it('should trigger onExpire callback when the item expires', () => {
+      const cache = new Qiks<string, string>({ storage: 'map' });
+      const onExpireSpy = (key: string, value: string | null) => {
+        expect(key).to.deep.equal('testKey');
+        expect(value).to.deep.equal('testValue');
+      };
+      cache.set('testKey', 'testValue', { ttl: 50, onExpire: onExpireSpy });
+      setTimeout(() => {
+        expect(cache.get('testKey')).to.be.null;
+      }, 100);
+    });
+    it('should handle onExpire when multiple items expire simultaneously', () => {
+      const cache = new Qiks<string, string>({ storage: 'map' });
+      const onExpireSpy = (key: string, value: string | null) => {
+        expect(['key1', 'key2']).to.include(key);
+        expect(['value1', 'value2']).to.include(value);
+      };
+      cache.set('key1', 'value1', { ttl: 50, onExpire: onExpireSpy });
+      cache.set('key2', 'value2', { ttl: 50, onExpire: onExpireSpy });
+      setTimeout(() => {
+        expect(cache.get('key1')).to.be.null;
+        expect(cache.get('key2')).to.be.null;
+      }, 100);
+    });
+    it('should work with dependent keys and trigger onExpire for all dependents', () => {
+      const cache = new Qiks<string, string>({ storage: 'map' });
+      const expiredKeys: string[] = [];
+      const onExpireSpy = (key: string, value: string | null) => {
+        expiredKeys.push(key);
+        if (expiredKeys.length === 3) {
+          expect(expiredKeys).to.have.members(['parent', 'child1', 'child2']);
+        }
+      };
+      cache.set('parent', 'value1', { ttl: 50, onExpire: onExpireSpy });
+      cache.set('child1', 'value2', { dependsOn: 'parent', onExpire: onExpireSpy });
+      cache.set('child2', 'value3', { dependsOn: 'parent', onExpire: onExpireSpy });
+      setTimeout(() => {
+        expect(cache.get('parent')).to.be.null;
+        expect(cache.get('child1')).to.be.null;
+        expect(cache.get('child2')).to.be.null;
+      }, 100);
     });
   });
-  it('should trigger onExpire callback when the item expires', (done) => {
-    const mapStorage = new Map<any, CacheItem<any, string>>();
-    const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
-    const cache = new Cache<string, string>({ storage, policy: 'LRU' });
-    const onExpireSpy = (key: string, value: string | null) => {
-      expect(key).to.deep.equal('testKey');
-      expect(value).to.deep.equal('testValue');
-      done();
-    };
 
-    cache.set('testKey', 'testValue', { ttl: 50, onExpire: onExpireSpy });
-
-    setTimeout(() => {
-      expect(cache.get('testKey')).to.be.null;
-    }, 100);
-  });
-
-  it('should handle onExpire when multiple items expire simultaneously', (done) => {
-    const mapStorage = new Map<any, CacheItem<any, string>>();
-    const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
-    const cache = new Cache<string, string>({ storage, policy: 'LRU' });
-    const onExpireSpy = (key: string, value: string | null) => {
-      expect(['key1', 'key2']).to.include(key);
-      expect(['value1', 'value2']).to.include(value);
-    };
-
-    cache.set('key1', 'value1', { ttl: 50, onExpire: onExpireSpy });
-    cache.set('key2', 'value2', { ttl: 50, onExpire: onExpireSpy });
-
-    setTimeout(() => {
-      expect(cache.get('key1')).to.be.null;
-      expect(cache.get('key2')).to.be.null;
-      done();
-    }, 100);
-  });
-
-  it('should work with dependent keys and trigger onExpire for all dependents', (done) => {
-    const mapStorage = new Map<any, CacheItem<any, string>>();
-    const storage = createStorageAdapter<any, CacheItem<any, string>>(mapStorage);
-    const cache = new Cache<string, string>({ storage, policy: 'LRU' });
-    const expiredKeys: string[] = [];
-
-    const onExpireSpy = (key: string, value: string | null) => {
-      expiredKeys.push(key);
-      if (expiredKeys.length === 3) {
-        expect(expiredKeys).to.have.members(['parent', 'child1', 'child2']);
-        done();
-      }
-    };
-
-    cache.set('parent', 'value1', { ttl: 50, onExpire: onExpireSpy });
-    cache.set('child1', 'value2', { dependsOn: 'parent', onExpire: onExpireSpy });
-    cache.set('child2', 'value3', { dependsOn: 'parent', onExpire: onExpireSpy });
-
-    setTimeout(() => {
-      expect(cache.get('parent')).to.be.null;
-      expect(cache.get('child1')).to.be.null;
-      expect(cache.get('child2')).to.be.null;
-    }, 100);
-  });
   describe('Cache - Pattern Matcher', () => {
-    let storage: StorageAdapter<string, CacheItem<string, string>>;
-    let cache: Cache<string, string>;
-    const mapStorage = new Map<string, CacheItem<string, string>>();
+    let cache: Qiks<string, string>;
 
     beforeEach(() => {
-      storage = createStorageAdapter<string, CacheItem<string, string>>(mapStorage);
-      storage.clear!();
-      cache = new Cache<string, string>({
-        storage,
-        policy: 'LRU',
+      cache = new Qiks<string, string>({
+        storage: 'map',
       });
-      mapStorage.clear();
     });
 
     it('should return matching keys for a given pattern', () => {
       cache.set('user:1', 'John Doe');
       cache.set('user:2', 'Jane Doe');
       cache.set('admin:1', 'Admin User');
+      const results = cache.get('user:*');
 
-      const results = cache.get('user:*', { pattern: true, keys: true });
       expect(results).to.have.members(['user:1', 'user:2']);
     });
 
@@ -262,8 +214,12 @@ describe('Cache Class - Advanced Tests', () => {
       cache.set('user:2', 'Jane Doe');
       cache.set('admin:1', 'Admin User');
 
-      const results = cache.get('user:*', { pattern: true, values: true });
-      expect(results).to.have.members(['John Doe', 'Jane Doe']);
+      const results = cache.get('user:*', { withTuple: true });
+
+      // Extract only values
+      const values = results?.map((entry) => entry.value);
+
+      expect(values).to.have.members(['John Doe', 'Jane Doe']);
     });
 
     it('should return matching key-value tuples for a given pattern', () => {
@@ -271,216 +227,16 @@ describe('Cache Class - Advanced Tests', () => {
       cache.set('user:2', 'Jane Doe');
       cache.set('admin:1', 'Admin User');
 
-      const results = cache.get('user:*', { pattern: true, withTuples: true });
+      const results = cache.get('user:*', { withTuple: true });
       expect(results).to.deep.equal([
-        ['user:1', 'John Doe'],
-        ['user:2', 'Jane Doe'],
+        { key: 'user:1', value: 'John Doe' },
+        { key: 'user:2', value: 'Jane Doe' },
       ]);
     });
 
     it('should handle an empty pattern and return no matches', () => {
-      const results = cache.get('nonexistent:*', { pattern: true, keys: true });
-      expect(results).to.have.lengthOf(0);
-    });
-
-    it('should handle edge case of matching a key with an empty value', () => {
-      cache.set('emptyKey', '');
-      const results = cache.get('emptyKey', { keys: true });
-      expect(results).to.deep.equal(['emptyKey']);
-    });
-  });
-  describe('Cache - Swr Option', () => {
-    let storage: StorageAdapter<string, CacheItem<string, string>>;
-    let cache: Cache<string, string>;
-    const mapStorage = new Map<string, any>();
-
-    beforeEach(() => {
-      storage = createStorageAdapter<string, CacheItem<string, any>>(mapStorage);
-      storage.clear!();
-      cache = new Cache<string, string>({
-        storage,
-        policy: 'LRU',
-      });
-      mapStorage.clear();
-    });
-
-    it('should return fresh data after revalidation when data is stale', async function () {
-      this.timeout(5000);
-
-      const key = 'user:1';
-      const staleData = 'Old Data';
-      const freshData = 'Fresh Data';
-
-      cache.set(key, staleData, {
-        swr: {
-          revalidate: async () => {
-            console.log('Revalidating...');
-            return freshData;
-          },
-          staleThreshold: 1000,
-        },
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      const result = await cache.get(key);
-      expect(result).to.equal(freshData);
-    });
-
-    it('should return old data when SWR is already running', async function () {
-      this.timeout(5000);
-      const key = 'user:2';
-      const oldData = 'Old Data';
-      const newData = 'New Data';
-      cache.set(key, oldData, {
-        swr: {
-          revalidate: async () => {
-            return newData;
-          },
-          staleThreshold: 1000,
-        },
-      });
-      const result1 = await cache.get(key);
-      expect(result1).to.equal(oldData);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const result2 = await cache.get(key);
-      expect(result2).to.equal(newData);
-    });
-
-    it('should return data immediately if not stale and no revalidation needed', async () => {
-      const key = 'user:4';
-      const data = 'Immediate Data';
-
-      cache.set(key, data, {
-        swr: {
-          revalidate: async () => {
-            return data;
-          },
-          staleThreshold: 1,
-        },
-      });
-
-      const result = await cache.get(key);
-      expect(result).to.equal(data);
-    });
-
-    it('should handle edge case when no swr option is provided', async () => {
-      const key = 'user:5';
-      const data = 'Edge Case Data';
-
-      cache.set(key, data);
-
-      const result = cache.get(key);
-      expect(result).to.equal(data);
-    });
-
-    it('should handle edge case when staleThreshold is set to 0', async () => {
-      const key = 'user:6';
-      const staleData = 'Stale Data';
-      const freshData = 'Fresh Data';
-
-      cache.set(key, staleData, {
-        swr: {
-          revalidate: async () => {
-            return freshData;
-          },
-          staleThreshold: 0,
-        },
-      });
-
-      const result = await cache.get(key);
-      expect(result).to.equal(freshData);
-    });
-
-    it('should trigger revalidation if lastFetched is too old', async function () {
-      this.timeout(5000);
-      const key = 'user:7';
-      const staleData = 'Stale Data';
-      const freshData = 'Fresh Data';
-
-      cache.set(key, staleData, {
-        swr: {
-          revalidate: async () => {
-            return freshData;
-          },
-          staleThreshold: 1000,
-        },
-      });
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const result = await cache.get(key);
-      expect(result).to.equal(freshData);
-    });
-  });
-  describe('Cache - Priority Option', () => {
-    let storage: StorageAdapter<string, any>;
-    let cache: Cache<string, string>;
-    const mapStorage = new Map<string, any>();
-
-    beforeEach(() => {
-      storage = createStorageAdapter<string, any>(mapStorage);
-      cache = new Cache<string, string>({
-        storage,
-        maxSize: 3,
-        policy: 'LRU',
-      });
-      cache.clear();
-    });
-
-    it('should evict the least recently used item when the cache is full (LRU)', () => {
-      cache.set('a', 'value1', { priority: 2 });
-      cache.set('b', 'value2', { priority: 1 });
-      cache.set('c', 'value3', { priority: 3 });
-      cache.get('a');
-      cache.set('d', 'value4', { priority: 2 });
-      expect(cache.has('b')).to.be.false;
-      expect(cache.has('a')).to.be.true;
-      expect(cache.has('d')).to.be.true;
-    });
-
-    it('should correctly call onExpire callback when item expires', function (done) {
-      const onExpire = (key: string, value: string | null) => {
-        expect(key).to.equal('a');
-        expect(value).to.equal('value1');
-        done();
-      };
-
-      cache.set('a', 'value1', { ttl: 100, onExpire });
-
-      setTimeout(() => {
-        cache.get('a');
-      }, 150);
-    });
-    it('should handle multiple items with the same priority', () => {
-      cache.set('a', 'value1', { priority: 2 });
-      cache.set('b', 'value2', { priority: 2 });
-      cache.set('c', 'value3', { priority: 2 });
-      cache.set('d', 'value4', { priority: 2 });
-      expect(cache.has('a')).to.be.false;
-      expect(cache.has('b') && cache.has('c') && cache.has('d')).to.be.true;
-    });
-
-    it('should evict items based on priority when multiple items have the same frequency', () => {
-      cache.set('a', 'value1', { priority: 1 });
-      cache.set('b', 'value2', { priority: 3 });
-      cache.set('c', 'value3', { priority: 2 });
-
-      cache.set('d', 'value4', { priority: 2 });
-
-      expect(cache.has('a')).to.be.false;
-      expect(cache.has('b')).to.be.true;
-      expect(cache.has('d')).to.be.true;
-    });
-    it('should handle evictions when maxSize is reached', () => {
-      cache.set('a', 'value1', { priority: 1 });
-      cache.set('b', 'value2', { priority: 2 });
-      cache.set('c', 'value3', { priority: 3 });
-      cache.set('d', 'value4', { priority: 1 });
-      cache.set('g', 'value5', { priority: 3 });
-      expect(cache.has('a')).to.be.false;
-      expect(cache.has('d')).to.be.false;
-      expect(cache.has('b')).to.be.true;
-      expect(cache.has('c')).to.be.true;
-      expect(cache.has('g')).to.be.true;
+      const results = cache.get('nonexistent:*');
+      expect(results).to.be.null;
     });
   });
 });

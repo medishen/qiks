@@ -1,3 +1,4 @@
 export * from './storage-adapter.interface';
-// export * from './eviction-policy.interface';
-// export * from './cache';
+export * from './eviction';
+export * from './cache';
+export * from './events';

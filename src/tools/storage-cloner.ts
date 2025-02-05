@@ -1,9 +1,9 @@
-import { StorageAdapter } from '../common/interfaces';
+import { CacheStorageAdapter } from "../common";
 
-export class StorageCloner<K, V> {
-  constructor(private adapter: StorageAdapter<K, V>) {}
+export class Cloner<K, V> {
+  constructor(private adapter: CacheStorageAdapter<K, V>) {}
 
-  clone(): StorageAdapter<K, V> {
+  clone(): CacheStorageAdapter<K, V> {
     const clonedAdapter: any = {}; // Create a new adapter instance
     clonedAdapter.merge(this.adapter);
     return clonedAdapter;

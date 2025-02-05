@@ -1,5 +1,5 @@
-import { EVENT_TYPE_PREFIX, INTERNAL_EVENT_PREFIX, INTERNAL_PREFIX, KEY_PREFIX } from '../constants';
-import { EventType } from '../enums';
+import { EVENT_TYPE_PREFIX, INTERNAL_EVENT_PREFIX, INTERNAL_PREFIX, KEY_PREFIX, INTERNAL_NAMESPACE_PREFIX } from '../common/constants';
+import { EventType } from '../common/enums';
 
 /**
  * Generates a event key with structured components for easy extraction.
@@ -15,4 +15,12 @@ export const generateEventKey = (event: EventType, key?: string): string => {
 
   // Combine all parts into a single event key
   return `${eventKey}${keyPart}`;
+};
+
+export const generateNamespaceKey = <K>(perfix: string, key?: K) => {
+  const keyPart = key ? `:${KEY_PREFIX}${key}` : '';
+  return perfix + keyPart;
+};
+export const generatePrefixNamespaceKey = (namespace: string) => {
+  return INTERNAL_PREFIX + INTERNAL_NAMESPACE_PREFIX + namespace;
 };

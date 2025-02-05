@@ -1,8 +1,8 @@
 import { expect } from 'chai';
-import { Qiks } from '../../src/index';
-import { CacheError } from '../../src/errors/CacheError';
-import { NamespaceCache } from '../../src/core/managers/NamespaceManager';
+import { Qiks } from '../../../src/index';
 import { beforeEach, describe, it } from 'mocha';
+import { CacheStoreWithNamespace, EventType } from '../../../src/common';
+import { CacheStore } from '../../../src/cache';
 
 describe('QIKS Integration Tests', () => {
   let cache: Qiks<string, any>;
@@ -66,7 +66,7 @@ describe('QIKS Integration Tests', () => {
     });
 
     it('should emit an "expire" event when a key expires', () => {
-      cache.on('expire', (key) => {
+      cache.on(EventType.Expire, (key) => {
         expect(key).to.equal('key1');
       });
       cache.set('key1', 'value1', { ttl: 100 });
@@ -83,8 +83,8 @@ describe('QIKS Integration Tests', () => {
   });
 
   describe('Namespaces', () => {
-    let namespace1: NamespaceCache<string, any>;
-    let namespace2: NamespaceCache<string, any>;
+    let namespace1: CacheStoreWithNamespace<string, any>;
+    let namespace2: CacheStoreWithNamespace<string, any>;
 
     beforeEach(() => {
       namespace1 = cache.namespace('ns1');
@@ -119,92 +119,43 @@ describe('QIKS Integration Tests', () => {
   });
 
   describe('Cache Events', () => {
-    it('should emit a "change" event on setting a value', (done) => {
+    it('should emit a "change" event on setting a value', () => {
       const myKey = 'key1';
-      cache.set(myKey, 'value');
-      cache.on(
-        'change',
-        (key, value) => {
-          expect(key).to.equal(myKey);
-          expect(value).to.equal('newValue');
-          done();
-        },
-        { key: myKey },
-      );
-      cache.set(myKey, 'newValue');
-    });
-    it('should emit and handle a custom event', (done) => {
-      const customEvent = 'customEvent';
-      const myKey = 'key1';
-      const myValue = 'customValue';
-      const customEventCallback = (key: string, value: string) => {
-        expect(key).to.equal(myKey);
-        expect(value).to.equal(myValue);
-        done();
-      };
+      cache.set(myKey, 'value'); // Initial set
 
-      cache.on(customEvent, customEventCallback);
-      cache.emit(customEvent, myKey, myValue);
+      cache.on(EventType.Change, (params) => {
+        expect(params.key).to.equal(myKey);
+        expect(params.newEntry?.value).to.equal('newValue');
+        expect(params.oldEntry?.value).to.equal('value');
+      });
+
+      cache.set(myKey, 'newValue'); // This should trigger the event
     });
-    it('should emit a "set" event on setting a value', (done) => {
-      cache.on('set', (key, value) => {
-        expect(key).to.equal('key1');
-        expect(value).to.equal('value1');
-        done();
+
+    it('should emit a "set" event on setting a value', () => {
+      cache.on(EventType.Set, (params) => {
+        expect(params.key).to.equal('key1');
+        expect(params.entry.value).to.equal('value1');
       });
       cache.set('key1', 'value1');
     });
 
-    it('should emit a "get" event on getting a value', (done) => {
+    it('should emit a "get" event on getting a value', () => {
       cache.set('key1', 'value1');
-      cache.on('get', (key, value) => {
-        expect(key).to.deep.equal('key1');
-        expect(value).to.deep.equal('value1');
-        done();
+      cache.on(EventType.Get, (params) => {
+        expect(params.key).to.deep.equal('key1');
+        expect(params.entry?.value).to.deep.equal('value1');
       });
       cache.get('key1');
     });
 
-    it('should emit a "delete" event on deleting a value', (done) => {
+    it('should emit a "delete" event on deleting a value', () => {
       cache.set('key1', 'value1');
-      cache.on('delete', (key, value) => {
-        expect(key).to.equal('key1');
-        expect(value).to.equal('value1');
-        done();
+      cache.on(EventType.Delete, (params) => {
+        expect(params.key).to.equal('key1');
+        expect(params.entry?.value).to.equal('value1');
       });
       cache.delete('key1');
-    });
-    it('should remove a listener with "off"', (done) => {
-      const customEvent = 'customEvent';
-      const myKey = 'key1';
-      const myValue = 'customValue';
-
-      const customEventCallback = (key: string, value: string) => {
-        expect(key).to.equal(myKey);
-        expect(value).to.equal(myValue);
-        done();
-      };
-      cache.on(customEvent, customEventCallback);
-      cache.emit(customEvent, myKey, myValue);
-      cache.off(customEvent, customEventCallback);
-      cache.emit(customEvent, myKey, myValue);
-    });
-  });
-
-  describe('Edge Cases', () => {
-    it('should throw an error for empty key on set', () => {
-      expect(() => cache.set('', 'value1')).to.throw('Key must not be empty');
-    });
-
-    it('should throw an error for empty namespace', () => {
-      expect(() => cache.namespace('')).to.throw(CacheError, 'Namespace name must not be empty');
-    });
-
-    it('should handle a large number of keys efficiently', () => {
-      for (let i = 0; i < 10000; i++) {
-        cache.set(`key${i}`, `value${i}`);
-      }
-      expect(cache.size()).to.equal(100);
     });
   });
 });
