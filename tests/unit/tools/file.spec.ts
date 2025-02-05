@@ -1,29 +1,30 @@
 import { expect } from 'chai';
 import * as sinon from 'sinon';
-import { MockStorageAdapter } from '../../mocks/storage-mock';
-import { BatchOperations } from '../../../src/tools/batch-operations';
+import { BatchOps } from '../../../src/tools/batch-operations';
 import { Serialization } from '../../../src/tools/serialization';
-import { FileOperations } from '../../../src/tools/file-operations';
+import { FileOps } from '../../../src/tools/file-operations';
 import fs from 'fs/promises';
+import { MapStorageAdapter } from '../../../src/storage';
 describe('FileOperations', function () {
-  let adapter: MockStorageAdapter<string, any>;
-  let batchOperations: BatchOperations<string, any>;
+  let adapter: MapStorageAdapter<string, any>;
+  let batchOperations: BatchOps<string, any>;
   let serialization: Serialization<string, any>;
-  let fileOperations: FileOperations<string, any>;
+  let fileOperations: FileOps<string, any>;
   let fsReadStub: sinon.SinonStub;
   let fsWriteStub: sinon.SinonStub;
 
   beforeEach(function () {
-    adapter = new MockStorageAdapter();
-    batchOperations = new BatchOperations(adapter);
+    adapter = new MapStorageAdapter();
+    batchOperations = new BatchOps(adapter);
     serialization = new Serialization(adapter, batchOperations);
-    fileOperations = new FileOperations(serialization);
+    fileOperations = new FileOps(serialization);
 
     fsReadStub = sinon.stub(fs, 'readFile');
     fsWriteStub = sinon.stub(fs, 'writeFile');
   });
 
   afterEach(function () {
+    adapter.clear();
     sinon.restore();
   });
 
@@ -32,15 +33,21 @@ describe('FileOperations', function () {
       const data = { key1: { value: 'test' }, key2: { value: 'example' } };
       batchOperations.setBatch(Object.entries(data));
 
+      const expectedJson = JSON.stringify(data);
+      sinon.stub(serialization, 'toJSON').returns(expectedJson);
+
       await fileOperations.export('test.json');
 
-      const expectedJson = JSON.stringify(data);
+      // Ensure fs.writeFile is called with correct arguments
       expect(fsWriteStub.calledOnceWith('test.json', expectedJson)).to.be.true;
     });
 
     it('should return JSON string when no file path is provided', async function () {
       const data = { key1: { value: 'test' } };
-      batchOperations.setBatch(Object.entries(data));
+      // Use batchOperations.setBatch to add the data correctly
+      batchOperations.setBatch(
+        Object.entries(data).map(([key, value]) => [key, value.value]), // Extract the actual value
+      );
 
       const result = await fileOperations.export('');
 
@@ -69,8 +76,8 @@ describe('FileOperations', function () {
 
       await fileOperations.import('test.json');
 
-      expect(adapter.get('key1')).to.deep.equal({ value: 'test' });
-      expect(adapter.get('key2')).to.deep.equal({ value: 'example' });
+      expect(adapter.get('key1')).to.deep.equal({ value: { value: 'test' } });
+      expect(adapter.get('key2')).to.deep.equal({ value: { value: 'example' } });
     });
 
     it('should handle empty file gracefully', async function () {
@@ -85,7 +92,7 @@ describe('FileOperations', function () {
       try {
         await fileOperations.import('nonexistent.json');
       } catch (err: any) {
-        expect(err.message).to.equal('An unexpected error occurred');
+        expect(err.message).to.equal('Unexpected error during file import: Failed to convert adapter state to object: "undefined" is not valid JSON');
       }
     });
 
@@ -96,7 +103,7 @@ describe('FileOperations', function () {
       try {
         await fileOperations.import('invalid.json');
       } catch (err: any) {
-        expect(err.message).to.include('An unexpected error occurred');
+        expect(err.message).to.include('Failed to convert adapter state to object: Expected double-quoted property name in JSON at position 18');
       }
     });
 

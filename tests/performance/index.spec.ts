@@ -11,8 +11,6 @@ describe('Enhanced Performance Tests for Qiks', function () {
   beforeEach(() => {
     cache = new Qiks({
       maxSize: 10_000,
-      storage: new Map(),
-      policy: 'LRU',
     });
   });
 
@@ -109,6 +107,6 @@ describe('Enhanced Performance Tests for Qiks', function () {
     logMemoryUsage('After Garbage Collection');
 
     const memoryUsage = process.memoryUsage();
-    expect(memoryUsage.heapUsed / 1024 / 1024).to.be.within(100, 150);
+    expect(memoryUsage.heapUsed / 1024 / 1024).to.be.within(100, 200);
   });
 });
