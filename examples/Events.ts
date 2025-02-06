@@ -1,19 +1,19 @@
-import { Qiks } from '../dist';
+import { EventType, Qiks } from '../dist';
 
 // Create a cache instance
 const cache = new Qiks<string, any>({ maxSize: 5 });
 
 // Set up event listeners for cache operations
-cache.on('set', (key, value) => {
-  console.log(`Cache Set: ${key} =>`, value);
+cache.on(EventType.Set, (params) => {
+  console.log(`Cache Set: ${params.key} =>`, params.entry.value);
 });
 
-cache.on('get', (key, value) => {
-  console.log(`Cache Get: ${key} =>`, value);
+cache.on(EventType.Get, (params) => {
+  console.log(`Cache Get: ${params.key} =>`, params.entry?.value);
 });
 
-cache.on('delete', (key, value) => {
-  console.log(`Cache Delete: ${key} =>`, value);
+cache.on(EventType.Delete, (params) => {
+  console.log(`Cache Delete: ${params.key} =>`, params.entry.value);
 });
 
 // Set some values in the cache

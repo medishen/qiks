@@ -1,19 +1,18 @@
-import { Qiks } from '../../dist';
+import { EventType, Qiks } from '../../dist';
 
 const cache = new Qiks<string, any>({
   maxSize: 3,
-  policy: 'LRU',
 });
 
 // Set up event listeners for cache operations
-cache.on('set', (key, value) => {
-  console.log(`Set: ${key} =>`, value);
+cache.on(EventType.Expire, ({ entry, key, type }) => {
+  console.log(`Set: ${key} =>`, entry?.value);
 });
-cache.on('get', (key, value) => {
-  console.log(`Get: ${key} =>`, value);
+cache.on(EventType.Get, ({ key, type, entry }) => {
+  console.log(`Get: ${key} =>`, entry?.value);
 });
-cache.on('delete', (key, value) => {
-  console.log(`Delete: ${key} =>`, value);
+cache.on(EventType.Delete, ({ key, type, entry }) => {
+  console.log(`Delete: ${key} =>`, entry?.value);
 });
 
 // Create some cache items with different policies

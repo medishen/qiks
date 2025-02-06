@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import { Qiks } from '../../../src/index';
 import { beforeEach, describe, it } from 'mocha';
 import { CacheStoreWithNamespace, EventType } from '../../../src/common';
-import { CacheStore } from '../../../src/cache';
 
 describe('QIKS Integration Tests', () => {
   let cache: Qiks<string, any>;

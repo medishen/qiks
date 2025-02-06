@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200">
+  <defs>
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A1A1A"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </linearGradient>
+    
+    <radialGradient id="orbGradient" cx="40%" cy="40%" r="70%">
+      <stop offset="0%" stop-color="#00FFD1"/>
+      <stop offset="100%" stop-color="#009688"/>
+    </radialGradient>
+    
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <circle cx="50" cy="50" r="48" fill="url(#mainGradient)" stroke="url(#mainGradient)" 
+          stroke-width="2" filter="url(#glow)"/>
+  
+  <g stroke-linecap="round">
+    <path d="M30,50 Q42,38 50,50 Q58,62 70,50" fill="none" 
+          stroke="rgba(0,255,209,0.3)" stroke-width="2.5"/>
+    <path d="M28,50 Q44,34 50,50 Q56,66 72,50" fill="none" 
+          stroke="rgba(0,255,209,0.2)" stroke-width="2"/>
+    <path d="M26,50 Q46,30 50,50 Q54,70 74,50" fill="none" 
+          stroke="rgba(0,255,209,0.15)" stroke-width="1.5"/>
+  </g>
+
+  <circle cx="50" cy="50" r="12" fill="url(#orbGradient)" 
+          stroke="#FFFFFF" stroke-width="1.5" opacity="0.9">
+    <animate attributeName="r" values="12;14;12" dur="2s" repeatCount="indefinite"/>
+  </circle>
+
+  <circle cx="50" cy="50" r="4" fill="#FF7043">
+    <radialGradient id="coreGlow">
+      <stop offset="70%" stop-color="#FF7043"/>
+      <stop offset="100%" stop-color="#FF5722"/>
+    </radialGradient>
+    <circle cx="50" cy="50" r="2" fill="#FFFFFF" opacity="0.8"/>
+  </circle>
+
+  <g stroke="#FFFFFF" opacity="0.1">
+    <line x1="50" y1="20" x2="50" y2="80" stroke-width="0.5"/>
+    <line x1="20" y1="50" x2="80" y2="50" stroke-width="0.5"/>
+  </g>
+
+  <text x="50%" y="92" text-anchor="middle" font-family="'Segoe UI', sans-serif" 
+        font-size="10" font-weight="600" letter-spacing="1.5" fill="#00FFD1"
+        text-shadow="0 1px 2px rgba(0,0,0,0.5)">
+    QIKS
+  </text>
+
+  <circle cx="50" cy="50" r="48" fill="none" stroke="rgba(0,255,209,0.1)" 
+          stroke-width="1" stroke-dasharray="2 4"/>
+</svg>

@@ -6,10 +6,25 @@ import { EventType } from '../common/enums/events/events-type.enumts';
 import { extractNamespaceKey, generateNamespaceKey, generatePrefixNamespaceKey, isNull, namespaceKey } from '../utils';
 import { CacheKeyManager } from '../managers/key.manager';
 import { MonitoringAdapter } from '../monitoring';
-
+/**
+   * The `CacheStore` class provides a high-level API for managing a cache system, implementing various caching strategies such as eviction and monitoring.
+   * It encapsulates the storage layer, eviction policies, events, and tools for cache management and monitoring.
+   * This class allows interacting with the cache, retrieving, storing, and evicting cache entries efficiently.
+   * It also integrates with an event system to notify about cache state changes, such as insertions, evictions, and expirations.
+   * The cache storage can be customized through configuration, making this class flexible for various caching needs.
+   *
+   * @template K - The type of the cache keys.
+   * @template V - The type of the cache values.
+   */
 export class CacheStore<K, V> {
   private readonly eviction: EvictionStrategy<K, V>;
   private readonly events: EventSystem<EventType, K, V>;
+  /**
+   * The `CacheTools` instance that provides utility functions for cache management, including cache expiration, key validation,
+   * and other operations related to the cache's internal logic.
+   * 
+   * @public
+   */
   public readonly cacheTools: CacheTools<K, V>;
   private readonly keyManager: CacheKeyManager<K, V>;
   private readonly storage: CacheStorageAdapter<K, V>;
@@ -214,7 +229,7 @@ export class CacheStore<K, V> {
   //======================= Eviction Methods =======================//
   getCacheStats() {
     return {
-      ...this.monitoring.getMetrics(), // Include monitoring metrics
+      ...this.monitoring.getMetrics(),
       ...this.eviction.getUsageStats(),
     };
   }
@@ -223,7 +238,6 @@ export class CacheStore<K, V> {
     return this.eviction.isFull();
   }
 
-  // Add this method to emit statistics updates
   private updateStatistics(): void {
     const stats = this.getCacheStats();
     this.events.emit({
@@ -241,7 +255,7 @@ export class CacheStore<K, V> {
     this.events.removeListener(event, listener);
   }
 
-  getListeners(event: EventType) {
+  getListeners<T extends EventType>(event: T) {
     return this.events.getListeners(event);
   }
 
@@ -249,6 +263,7 @@ export class CacheStore<K, V> {
     return this.events.getAllEvents();
   }
 
+  //======================= Namespace Methods =======================//
   namespace<T extends string = string>(namespace: T): CacheStoreWithNamespace<K, V> {
     const nsPrefix = generatePrefixNamespaceKey(namespace);
     const self = this;
