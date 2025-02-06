@@ -1,25 +1,8 @@
 import { expect } from 'chai';
-import { StorageAdapter } from '../../../dist/types/CacheTypes';
-import { CacheEntry } from '../../../src/common/interfaces/cache/cache-entry.interface';
 import { LRUEvictionPolicy } from '../../../src/eviction/lru.eviction';
 import { CacheStorageAdapter } from '../../../src/common';
 import { MapStorageAdapter } from '../../../src/storage';
 import { LFUEvictionPolicy, MRUEvictionPolicy } from '../../../src/eviction';
-
-function createMockStorage() {
-  let store = new Map();
-  return {
-    type: 'Map',
-    set: (key: any, value: any) => store.set(key, value),
-    get: (key: any) => store.get(key),
-    delete: (key: any) => store.delete(key),
-    has: (key: any) => store.has(key),
-    size: () => store.size,
-    keys: () => store.keys(),
-    entries: () => store.entries(),
-  } as StorageAdapter<any, any>;
-}
-
 describe('Eviction Policies', function () {
   describe('LRU (Least Recently Used)', function () {
     let storage: CacheStorageAdapter<string, any>;

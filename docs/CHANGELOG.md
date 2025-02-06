@@ -187,3 +187,96 @@
 - **Documentation**:
   - Updated documentation to reflect changes in cache management, event handling, and eviction policies.
   - Detailed the removal of serialization and deserialization features in the project documentation.
+
+## [2.0.0] - 2025-02-05
+
+### Breaking Changes
+
+- **Unified Cache Data Structure**:  
+  The internal data model has been unified across components. The cache now uses a single `CacheEntry` type throughout storage, event management, and eviction policies. This change removes previously separated types for user-facing items and internal eviction metadata.
+- **Complete Cache Lifecycle Management**
+  - Fully implemented cache lifecycle with accurate handling of `Qiks` configurations.
+  - Refactored storage adapters to ensure consistent sync execution.
+  - Introduced a flexible `ConfigManager` for better configuration management.
+
+---
+
+### Features
+
+- **Lifecycle Management and Configuration**:
+  - **Cache Lifecycle Overhaul**: The entire cache lifecycle has been completely refactored and reimplemented, ensuring robust creation, update, expiration, and eviction of cache items.
+  - **Type-Safe Configuration Manager**: A new configuration manager enables advanced, type-safe configuration of cache settings including TTL, eviction policies, namespaces, and dependency management.
+  - **Unified Cache Store (`Qiks`)**: The main cache store now integrates advanced features such as dependency management, SWR (Stale-While-Revalidate), and configurable eviction policies (LRU, LFU, MRU) into a single, coherent API.
+- **Eviction Policies**:
+  - **Least Recently Used (LRU)**: Fully implemented LRU eviction to remove the least recently accessed items when capacity is exceeded.
+  - **Least Frequently Used (LFU)**: Added LFU eviction to track access frequencies and evict the least used items.
+  - **Most Recently Used (MRU)**: Implemented MRU eviction for scenarios that require aggressive removal of fresh data.
+  - All eviction strategies now share a common, generic eviction interface, ensuring flexibility and consistent behavior across policies.
+- **Cache Events and Monitoring**:
+
+  - **Event System Enhancements**
+  - Refactored event system to provide better modularity, scalability, and maintainability.
+  - **Event-Driven Architecture**: A complete event system is now in place with support for events like `Set`, `Get`, `Delete`, `Expire`, `Change`, `Update`, `Rebuild`, `Miss`, `Hit`, `Eviction`, `Clear`, `OperationError`, `CriticalFailure`, `StatisticsUpdated`, and a general `Error` event.
+  - **Advanced Event Key Handling**: Events now support structured event keys with namespace support, enabling precise event tracking and filtering.
+  - **Monitoring Adapter**: A monitoring adapter collects detailed metrics (hits, misses, writes, deletes, evictions, cache size, and total items) to facilitate performance tracking and debugging.
+
+- **Pattern-Based Key Matching**:
+
+  - Implemented a robust `PatternManager` that supports Redis-style patterns using wildcards (`*`, `?`), character classes (e.g., `[abc]`, `[a-z]`), negation (`[^abc]`), and escaped characters.
+  - This feature allows users to perform pattern-based queries on keys, mimicking Redis functionality.
+
+- **Dependency Management**:
+  - A dedicated dependency manager automatically tracks and invalidates related cache items when a parent item is deleted or expires.
+  -
+- **Error Handling Improvements**
+  - Unified error management with `createException()` factory method.
+  - Improved error handling in tools and storage systems.
+- **Utilities & Tool Enhancements**
+  - Introduced structured **pattern management** for key organization.
+  - Added new functional utilities (`batch operations`, `file operations`, `grouping`, `array conversions`).
+  - Implemented monitoring and metrics tracking for cache
+
+---
+
+### Enhancements
+
+- **Performance Optimizations**:
+  - Extensive benchmarks have been implemented for cache operations (set, get, delete, eviction, mixed operations, and stress tests) with significant improvements observed after warm-up and JIT compilation.
+  - Storage adapters (Map and WeakMap) have been optimized for efficient key iteration, lookup, and memory management.
+- **Improved Error Handling**:
+
+  - A new custom error hierarchy and factory method streamline error reporting across cache operations.
+  - Edge cases and unexpected conditions are now handled more gracefully, with clear error messages and event emission for failures.
+
+- **Code Refactoring and Type-Safety**:
+  - Comprehensive refactoring across cache, events, eviction, and storage modules ensures consistent type usage and improved maintainability.
+  - Internal APIs have been streamlined to reduce redundancy, and configuration options have been unified into a single, coherent interface.
+- **Documentation and Examples**:
+  - The documentation has been thoroughly updated to reflect the new lifecycle, event system, and configuration options.
+  - Real-world examples, a detailed FAQ, and migration guides have been added to help users transition to v2.
+
+---
+
+### Fixes
+
+- **Eviction Edge Cases**:
+  - Resolved bugs in eviction logic when multiple items had similar recency or frequency values.
+- **TTL Expiration Accuracy**:
+  - Fixed issues where cache entries would expire prematurely due to misconfigured TTL settings.
+- **Event System Bugs**:
+  - Corrected several issues in event emission and listener management, ensuring that all events are correctly emitted and handled.
+- **Namespace and Pattern Matching**:
+  - Addressed bugs in namespace key handling and pattern matching to ensure that keys are correctly identified and extracted.
+- **General Stability**:
+  - Various minor bugs and edge cases in cache operations, dependency management, and metrics tracking have been fixed.
+- **Remove Get Method Options**
+  - Multiple options about the get method to be removed. Like swr and tranform and etc.
+
+---
+
+### Miscellaneous
+
+- **Project Structure Improvements**:
+  - The project structure has been refactored for better modularity, with clear separation between cache, events, eviction, storage, and configuration management.
+- **Build and Test Process**:
+  - The build process has been refined for efficiency, and the test suite now covers all major functionalities including unit and integration tests.

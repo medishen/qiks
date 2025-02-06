@@ -1,7 +1,6 @@
 import { describe, beforeEach, it } from 'mocha';
 import { expect } from 'chai';
 import { Qiks } from '../../../src';
-import { CacheExceptionFactory } from '../../../src/errors';
 
 describe('Cache Class - Advanced Tests', () => {
   let cache: Qiks<object, any>;
