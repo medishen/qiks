@@ -7,8 +7,6 @@
 **High-Performance TypeScript Caching Library**  
 _Smart Caching for Modern Applications_
 
----
-
 ## 🔍 Introduction
 
 QIKS is a next-generation caching solution designed for TypeScript/JavaScript applications requiring **blazing-fast in-memory operations**, **enterprise-grade features**, and **unparalleled flexibility**. Born from real-world needs in high-traffic systems, QIKS combines robust caching fundamentals with innovative capabilities.
@@ -23,8 +21,6 @@ QIKS is a next-generation caching solution designed for TypeScript/JavaScript ap
 | **Event-Driven Architecture** | 12+ event types with microsecond response       |
 | **TypeSafe™ Guarantee**       | Full TypeScript generics support                |
 | **Storage Agnostic**          | Map, WeakMap, or bring your own adapter         |
-
----
 
 ## 🌟 Features
 
@@ -74,8 +70,6 @@ QIKS is a next-generation caching solution designed for TypeScript/JavaScript ap
 - **Adaptive Memory Management**  
   Automatic scaling with heap pressure detection
 
----
-
 ## 📦 Installation
 
 ```bash
@@ -116,16 +110,12 @@ userCache.set('456', { id: '456', name: 'Bob' });
 console.log(userCache.get('456')); // Outputs: { id: '456', name: 'Bob' }
 ```
 
----
-
 ## 📚 Documentation
 
 | Resource          | Description                      | Link                                                                 |
 | ----------------- | -------------------------------- | -------------------------------------------------------------------- |
 | **Core Concepts** | Architecture & Design Philosophy | [Wiki](https://github.com/medishen/qiks/wiki/Core-Concepts)          |
 | **API Reference** | Complete Method Documentation    | [API Docs](https://github.com/medishen/qiks/wiki/QIKS-API-Reference) |
-
----
 
 ## 🛡 Benchmarks
 
@@ -141,8 +131,6 @@ QIKS outperforms popular alternatives in key metrics:
 
 > NOTE: Eviction timing is slightly higher due to TTL overhead but remains within acceptable limits
 
----
-
 ## 🤝 Contributing
 
 We welcome contributions! Please follow our  
@@ -157,13 +145,9 @@ npm install
 npm run test
 ```
 
----
-
 ## 📜 License
 
 MIT License - See [LICENSE](https://github.com/medishen/qiks/blob/main/LICENSE)
-
----
 
 ## 📬 Contact
 
@@ -172,8 +156,6 @@ MIT License - See [LICENSE](https://github.com/medishen/qiks/blob/main/LICENSE)
 | **Issues**      | [GitHub Issues](https://github.com/medishen/qiks/issues)  |
 | **Discussions** | [Q&A Forum](https://github.com/medishen/qiks/discussions) |
 | **Email**       | [bitsgenix@gmail.com](mailto:bitsgenix@gmail.com)         |
-
----
 
 **QIKS** - Because Your Data Deserves Speed®  
 _An open-source project by [MediSHN Technologies](https://github.com/medishen)_
