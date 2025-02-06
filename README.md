@@ -127,22 +127,6 @@ console.log(userCache.get('456')); // Outputs: { id: '456', name: 'Bob' }
 
 ---
 
-## 🛡 Benchmarks
-
-### Performance Overview
-
-QIKS outperforms popular alternatives in key metrics:
-
-| Operation  | QIKS v2.1 | Competitor A | Competitor B | Improvement  |
-| ---------- | --------- | ------------ | ------------ | ------------ |
-| **SET**    | 0.02µs    | 0.15µs       | 0.12µs       | 6-7x faster  |
-| **GET**    | 0.01µs    | 0.08µs       | 0.06µs       | 6-8x faster  |
-| **DELETE** | 0.01µs    | 0.10µs       | 0.08µs       | 8-10x faster |
-
-> NOTE: Eviction timing is slightly higher due to TTL overhead but remains within acceptable limits
-
----
-
 ## 🤝 Contributing
 
 We welcome contributions! Please follow our  
